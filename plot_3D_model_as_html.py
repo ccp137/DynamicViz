@@ -651,7 +651,11 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
             i = i + 1
         }
         var encodedUri = encodeURI(temp)
-        window.open(encodedUri)
+        link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', 'vel_model.txt');
+        link.click();
+        //window.open(encodedUri)
         
     """)
 
@@ -689,6 +693,10 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
             i = i + 1
         }
         var encodedUri = encodeURI(temp)
+        link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', 'vel_model96.txt');
+        link.click();
         window.open(encodedUri)                                   
     """)                                       
     model96_button = Button(label=style_parameter['model96_botton_label'], button_type='default', width=style_parameter['button_width'],\
