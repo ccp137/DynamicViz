@@ -6,8 +6,11 @@
 # Version 1.2
 #
 # Updates:
+#       V1.0, Chengping Chai, Penn State, 2016
 #       V1.1, Chengping Chai, University of Tennessee, October 2, 2017
 #         some changes for bokeh 0.12.9
+#       V1.2, Chengping Chai, University of Tennessee, October 6, 2017
+#         minor changes
 #
 # This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh
 # submitted to SRL.
