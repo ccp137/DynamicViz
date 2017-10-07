@@ -2,18 +2,22 @@
 # 
 # by Chengping Chai, Penn State, 2016
 # 
-# Version 1.1
+# Version 1.0
 #
+<<<<<<< HEAD
 # Updates:
 #       V1.1, Chengping Chai, University of Tennessee, October 2, 2017
 #         minor changes for bokeh 0.12.9
 #
 # This script is prepared for a paper named as Interactive Seismic Visualization Using Bokeh submitted to SRL.
+=======
+# This script is prepared for a paper named as Interactive Seismic Visualization Using HTML.
+>>>>>>> parent of 3c94b7b... update files
 #
 # Requirement:
 #       numpy 1.10.4
 #       scipy 0.17.0
-#       bokeh 0.12.9
+#       bokeh 0.12.0
 #
 import numpy as np
 from scipy import interpolate
@@ -21,7 +25,7 @@ from bokeh.plotting import Figure, output_file, save
 from bokeh.palettes import RdYlBu11 as palette
 from bokeh.plotting import ColumnDataSource
 from bokeh.models import CustomJS
-from bokeh.models import Column, Row
+from bokeh.models import HBox, VBox
 from bokeh.models.widgets import Slider, Button
 from bokeh.models import FixedTicker, PrintfTickFormatter
 from bokeh.models import Rect
@@ -354,6 +358,7 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
     #
     palette_r = palette[::-1]
     # data for the colorbar
+<<<<<<< HEAD
     colorbar_data_one_slice = {}
     colorbar_data_one_slice['colorbar_left'] = colorbar_data_all_left[style_parameter['map_view_default_index']]
     colorbar_data_one_slice['colorbar_right'] = colorbar_data_all_right[style_parameter['map_view_default_index']]
@@ -363,6 +368,12 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
                                                                palette_r=palette_r))
     colorbar_data_all_slices_bokeh = ColumnDataSource(data=dict(colorbar_data_all_left=colorbar_data_all_left,\
                                                                 colorbar_data_all_right=colorbar_data_all_right))
+=======
+    colorbar_data_one_slice = colorbar_data_all_slices_left_right[style_parameter['map_view_default_index']]
+    colorbar_data_one_slice_bokeh = ColumnDataSource(data=dict(colorbar_left=colorbar_data_one_slice['colorbar_left'],\
+                                                               colorbar_right=colorbar_data_one_slice['colorbar_right']))
+    colorbar_data_all_slices_left_right_bokeh = ColumnDataSource(data=dict(colorbar_data_all_slices_left_right=colorbar_data_all_slices_left_right))
+>>>>>>> parent of 3c94b7b... update files
     #
     map_view_label_lon = style_parameter['map_view_depth_label_lon']
     map_view_label_lat = style_parameter['map_view_depth_label_lat']
@@ -374,30 +385,21 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
     map_view_default_index = style_parameter['map_view_default_index']
     map_data_one_slice = map_data_all_slices[map_view_default_index]
 
-    map_data_one_slice_bokeh = ColumnDataSource(data=dict(x=[style_parameter['map_view_image_lon_min']],\
-                   y=[style_parameter['map_view_image_lat_min']],dw=[style_parameter['nlon']],\
-                   dh=[style_parameter['nlat']],map_data_one_slice=[map_data_one_slice]))
+    map_data_one_slice_bokeh = ColumnDataSource(data=dict(map_data_one_slice=[map_data_one_slice]))
     map_data_all_slices_bokeh = ColumnDataSource(data=dict(map_data_all_slices=map_data_all_slices,\
                                                            map_data_all_slices_depth=map_data_all_slices_depth))
     # ------------------------------
     nprofile = len(profile_data_all)
     grid_lat_list = []
     grid_lon_list = []
-    width_list = []
-    height_list = []
     for iprofile in range(nprofile):
         aprofile = profile_data_all[iprofile]
         grid_lat_list.append(aprofile['lat'])
         grid_lon_list.append(aprofile['lon'])
-        width_list.append(style_parameter['map_view_grid_width'])
-        height_list.append(style_parameter['map_view_grid_height'])
-    grid_data_bokeh = ColumnDataSource(data=dict(lon=grid_lon_list,lat=grid_lat_list,\
-                                            width=width_list, height=height_list))
+    grid_data_bokeh = ColumnDataSource(data=dict(lon=grid_lon_list,lat=grid_lat_list))
     profile_default_index = style_parameter['profile_default_index']
     selected_dot_on_map_bokeh = ColumnDataSource(data=dict(lat=[grid_lat_list[profile_default_index]], \
                                                            lon=[grid_lon_list[profile_default_index]], \
-                                                           width=[style_parameter['map_view_grid_width']],\
-                                                           height=[style_parameter['map_view_grid_height']],\
                                                            index=[profile_default_index]))
     # ------------------------------
     profile_vs_all = []
@@ -425,11 +427,9 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
     selected_profile_data_bokeh = ColumnDataSource(data=dict(vs=profile_vs_all[profile_default_index],\
                                                              depth=profile_depth_all[profile_default_index]))
     selected_profile_lat_label_bokeh = ColumnDataSource(data=\
-                                dict(x=[style_parameter['profile_lat_label_x']], y=[style_parameter['profile_lat_label_y']],\
-                                    lat_label=[profile_lat_label_list[profile_default_index]]))
+                                dict(lat_label=[profile_lat_label_list[profile_default_index]]))
     selected_profile_lon_label_bokeh = ColumnDataSource(data=\
-                                dict(x=[style_parameter['profile_lon_label_x']], y=[style_parameter['profile_lon_label_y']],\
-                                    lon_label=[profile_lon_label_list[profile_default_index]]))
+                                dict(lon_label=[profile_lon_label_list[profile_default_index]]))
     all_profile_lat_label_bokeh = ColumnDataSource(data=dict(profile_lat_label_list=profile_lat_label_list))
     all_profile_lon_label_bokeh = ColumnDataSource(data=dict(profile_lon_label_list=profile_lon_label_list))
     #
@@ -450,13 +450,13 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
                                                        button_data_all_top=button_data_all_top))
     # ==============================
     map_view = Figure(plot_width=style_parameter['map_view_plot_width'], plot_height=style_parameter['map_view_plot_height'], \
-                      tools=style_parameter['map_view_tools'], title=style_parameter['map_view_title'], \
+                      tools=style_parameter['map_view_tools'], webgl=True, title=style_parameter['map_view_title'], \
                       y_range=[style_parameter['map_view_figure_lat_min'], style_parameter['map_view_figure_lat_max']],\
                       x_range=[style_parameter['map_view_figure_lon_min'], style_parameter['map_view_figure_lon_max']])
     #
-    map_view.image('map_data_one_slice',x='x',\
-                   y='y',dw='dw',\
-                   dh='dh',palette=palette_r,\
+    map_view.image('map_data_one_slice',x=[style_parameter['map_view_image_lon_min']],\
+                   y=[style_parameter['map_view_image_lat_min']],dw=[style_parameter['nlon']],\
+                   dh=[style_parameter['nlat']],palette=palette_r,\
                    source=map_data_one_slice_bokeh, level='image')
 
     depth_slider_callback = CustomJS(args=dict(map_data_one_slice_bokeh=map_data_one_slice_bokeh,\
@@ -491,39 +491,35 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
     # country boundaries
     map_view.multi_line(boundary_data['country']['longitude'],\
                         boundary_data['country']['latitude'],color='black',\
-                        line_width=2, level='underlay',nonselection_line_alpha=1.0,\
-                        nonselection_line_color='black')
+                        line_width=2, level='image')
     # marine boundaries
     map_view.multi_line(boundary_data['marine']['longitude'],\
                         boundary_data['marine']['latitude'],color='black',\
-                        level='underlay',nonselection_line_alpha=1.0,\
-                        nonselection_line_color='black')
+                        level='image')
     # shoreline boundaries
     map_view.multi_line(boundary_data['shoreline']['longitude'],\
                         boundary_data['shoreline']['latitude'],color='black',\
-                        line_width=2, level='underlay',nonselection_line_alpha=1.0,\
-                        nonselection_line_color='black')
+                        line_width=2, level='image')
     # state boundaries
     map_view.multi_line(boundary_data['state']['longitude'],\
                         boundary_data['state']['latitude'],color='black',\
-                        level='underlay',nonselection_line_alpha=1.0,\
-                        nonselection_line_color='black')
+                        level='image')
      # ------------------------------
-    # add depth label
+    # add period label
     map_view.rect(style_parameter['map_view_depth_box_lon'], style_parameter['map_view_depth_box_lat'], \
                   width=style_parameter['map_view_depth_box_width'], height=style_parameter['map_view_depth_box_height'], \
-                  width_units='screen',height_units='screen', color='#FFFFFF', line_width=1., line_color='black', level='underlay')
+                  width_units='screen',height_units='screen', color='#FFFFFF', line_width=1., line_color='black', level='image')
     map_view.text('lon', 'lat', 'map_depth', source=map_data_one_slice_depth_bokeh,\
-                  text_font_size=style_parameter['annotating_text_font_size'],text_align='left',level='underlay')
+                  text_font_size=style_parameter['annotating_text_font_size'],text_align='left',level='image')
     # ------------------------------
-    map_view.rect('lon', 'lat', width='width', \
-                  width_units='screen', height='height', \
+    map_view.rect('lon', 'lat', width=style_parameter['map_view_grid_width'], \
+                  width_units='screen', height=style_parameter['map_view_grid_height'], \
                   height_units='screen', line_color='gray', line_alpha=0.5, \
                   selection_line_color='gray', selection_line_alpha=0.5, selection_fill_color=None,\
                   nonselection_line_color='gray',nonselection_line_alpha=0.5, nonselection_fill_color=None,\
                   source=grid_data_bokeh, color=None, line_width=1, level='glyph')
-    map_view.rect('lon', 'lat',width='width', \
-                  width_units='screen', height='height', \
+    map_view.rect('lon', 'lat',width=style_parameter['map_view_grid_width'], \
+                  width_units='screen', height=style_parameter['map_view_grid_height'], \
                   height_units='screen', line_color='#00ff00', line_alpha=1.0, \
                   source=selected_dot_on_map_bokeh, fill_color=None, line_width=3.,level='glyph')
     # ------------------------------
@@ -580,8 +576,13 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
     colorbar_fig = Figure(tools=[], y_range=(0,0.1),plot_width=style_parameter['map_view_plot_width'], \
                       plot_height=style_parameter['colorbar_plot_height'],title=style_parameter['colorbar_title'])
     colorbar_fig.toolbar_location=None
+<<<<<<< HEAD
     colorbar_fig.quad(top='colorbar_top',bottom='colorbar_bottom',left='colorbar_left',right='colorbar_right',\
                   color='palette_r',source=colorbar_data_one_slice_bokeh)
+=======
+    colorbar_fig.quad(top=colorbar_top,bottom=colorbar_bottom,left='colorbar_left',right='colorbar_right',\
+                  color=palette_r,source=colorbar_data_one_slice_bokeh)
+>>>>>>> parent of 3c94b7b... update files
     colorbar_fig.yaxis[0].ticker=FixedTicker(ticks=[])
     colorbar_fig.xgrid.grid_line_color = None
     colorbar_fig.ygrid.grid_line_color = None
@@ -604,8 +605,10 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
                      width=style_parameter['profile_label_box_width'], height=style_parameter['profile_label_box_height'],\
                      width_units='screen', height_units='screen', color='#FFFFFF', line_width=1., line_color='black',\
                      level='underlay')
-    profile_fig.text('x','y','lat_label', source=selected_profile_lat_label_bokeh)
-    profile_fig.text('x','y','lon_label', source=selected_profile_lon_label_bokeh)
+    profile_fig.text([style_parameter['profile_lat_label_x']], [style_parameter['profile_lat_label_y']], \
+                     'lat_label', source=selected_profile_lat_label_bokeh)
+    profile_fig.text([style_parameter['profile_lon_label_x']], [style_parameter['profile_lon_label_y']], \
+                     'lon_label', source=selected_profile_lon_label_bokeh)
     # ------------------------------
     # change style
     profile_fig.xaxis.axis_label = style_parameter['profile_xlabel']
@@ -684,10 +687,11 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
         link.setAttribute('href', encodedUri);
         link.setAttribute('download', 'vel_model.txt');
         link.click();
+        //window.open(encodedUri)
         
     """)
 
-    simple_text_button = Button(label=style_parameter['simple_text_button_label'], button_type='default', width=style_parameter['button_width'],\
+    simple_text_button = Button(label=style_parameter['simple_text_botton_label'], button_type='default', width=style_parameter['button_width'],\
                                 callback=simple_text_button_callback)
     # ------------------------------
     model96_button_callback = CustomJS(args=dict(button_data_all_bokeh=button_data_all_bokeh,\
@@ -727,9 +731,14 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
         link = document.createElement('a');
         link.setAttribute('href', encodedUri);
         link.setAttribute('download', 'vel_model96.txt');
+<<<<<<< HEAD
         link.click();                                  
+=======
+        link.click();
+        window.open(encodedUri)                                   
+>>>>>>> parent of 3c94b7b... update files
     """)                                       
-    model96_button = Button(label=style_parameter['model96_button_label'], button_type='default', width=style_parameter['button_width'],\
+    model96_button = Button(label=style_parameter['model96_botton_label'], button_type='default', width=style_parameter['button_width'],\
                                 callback=model96_button_callback)
     # ==============================
     # annotating text
@@ -739,19 +748,20 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
         width=style_parameter['annotation_plot_width'], height=style_parameter['annotation_plot_height'])
     # ==============================
     output_file(filename,title=style_parameter['html_title'], mode=style_parameter['library_source'])
-    left_column = Column(depth_slider, map_view, colorbar_fig, annotating_fig01, width=style_parameter['left_column_width'])
-    button_pannel = Row(simple_text_button, model96_button)
-    right_column = Column(profile_slider, profile_fig, button_pannel, annotating_fig02, width=style_parameter['right_column_width'])
-    layout = Row(left_column, right_column)
+    left_column = VBox(depth_slider, map_view, colorbar_fig, annotating_fig01, width=style_parameter['left_column_width'])
+    button_pannel = HBox(simple_text_button, model96_button)
+    right_column = VBox(profile_slider, profile_fig, button_pannel, annotating_fig02, width=style_parameter['right_column_width'])
+    layout = HBox(left_column, right_column)
     save(layout)
 if __name__ == '__main__':
-    # parameters used to customize figures
     style_parameter = {}
     style_parameter['html_title'] = 'Model Viewer'
     style_parameter['xlabel_fontsize'] = '12pt'
     style_parameter['xtick_label_fontsize'] = '12pt'
     style_parameter['title_font_size'] = '14pt'
     style_parameter['annotating_text_font_size'] = '12pt'
+    style_parameter['marker_size'] = 10
+    style_parameter['selected_marker_size'] = 20
     style_parameter['map_view_ndepth'] = 54
     style_parameter['nlat'] = 30
     style_parameter['nlon'] = 30
@@ -810,11 +820,12 @@ if __name__ == '__main__':
     #
     style_parameter['button_ndepth'] = 65
     width=style_parameter['button_width'] = 250
-    style_parameter['simple_text_button_label'] = 'Download the profile as a simple text file'
-    style_parameter['model96_button_label'] = 'Download the profile as the model96 format'
+    style_parameter['simple_text_botton_label'] = 'Download the profile as a simple text file'
+    style_parameter['model96_botton_label'] = 'Download the profile as the model96 format'
     #
     style_parameter['annotation_plot_width'] = 550
     style_parameter['annotation_plot_height'] = 150
+    style_parameter['annotation_tools'] = []
     #
     style_parameter['annotating_html01'] = """<p style="font-size:16px">
         <b> References:</b> <br>
@@ -832,10 +843,7 @@ if __name__ == '__main__':
     # inline for embeded libaries; CDN for online libaries
     style_parameter['library_source'] = 'inline' #'CDN'
     #
-    style_parameter['vmodel_filename'] = './WUS-CAMH-2015/2015GL063733-ds02.txt'
-    style_parameter['html_filename'] = 'model_viewer.html'
-    #
-    initial_model_raw = read_3D_output_model(style_parameter['vmodel_filename'])
+    initial_model_raw = read_3D_output_model('./WUS-CAMH-2015/2015GL063733-ds02.txt')
     model_3D = select_parameters(initial_model_raw)
     profile_data_all = prepare_profile_data(model_3D)
     # read boundary data
@@ -844,6 +852,8 @@ if __name__ == '__main__':
     map_data_all_slices, map_depth_all_slices, color_range_all_slices = \
             prepare_map_data(profile_data_all, ndepth=style_parameter['map_view_ndepth'])
     #
-    plot_3DModel_bokeh(style_parameter['html_filename'], map_data_all_slices, map_depth_all_slices, \
+    html_filename = 'model_viewer.html'
+    #
+    plot_3DModel_bokeh(html_filename, map_data_all_slices, map_depth_all_slices, \
                        color_range_all_slices, profile_data_all, boundary_data, \
                        style_parameter)
