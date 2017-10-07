@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Dipserion Interactive Viewer
 # 
 # by Chengping Chai, Penn State, 2016
@@ -632,4 +633,4 @@ if __name__ == '__main__':
     # 
     
     # plot dispersion data using bokeh
-    plot_dispersion_bokeh(html_filename, period_array, curve_data_array, boundary_data, style_parameter)
+    plot_dispersion_bokeh(style_parameter['html_filename'], period_array, curve_data_array, boundary_data, style_parameter)

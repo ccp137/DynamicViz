@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Velocity Model Interactive Viewer
 # 
 # by Chengping Chai, University of Tennessee, October 4, 2017
