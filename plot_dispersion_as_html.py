@@ -2,13 +2,17 @@
 # 
 # by Chengping Chai, Penn State, 2016
 # 
-# Version 1.0
+# Version 1.1
 #
-# This script is prepared for a paper named as Interactive Seismic Visualization Using HTML.
+# Updates:
+#       V1.1, Chengping Chai, University of Tennessee, September 20, 2017
+#         minor changes for bokeh 0.12.9
+#
+# This script is prepared for a paper named as Interactive Seismic Visualization Using Bokeh submitted to SRL.
 #
 # Requirement:
 #       numpy 1.10.4
-#       bokeh 0.12.0
+#       bokeh 0.12.9
 #
 import numpy as np
 from bokeh.plotting import Figure, output_file, save
@@ -16,7 +20,7 @@ from bokeh.plotting import ColumnDataSource
 from bokeh.palettes import RdYlBu11 as palette
 from bokeh.models.widgets import Slider
 from bokeh.models import CustomJS
-from bokeh.models import HBox, VBox
+from bokeh.models import Column, Row
 from bokeh.models import FixedTicker, PrintfTickFormatter
 from bokeh.models.widgets import Div
 from utility import *
@@ -195,7 +199,8 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
     map_data_all_slices_velocity = []
     map_data_all_slices_period = []
     map_data_all_slices_color = []
-    colorbar_data_all_slices_left_right = []
+    colorbar_data_all_left = []
+    colorbar_data_all_right = []
     nperiod = len(period_array)
     ncurve = len(curve_data_array)
     ncolor = len(palette)
@@ -206,7 +211,7 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
         one_slice_lat_list = []
         one_slice_lon_list = []
         one_slice_vel_list = []
-        colorbar_data_one_slice = {}
+        
         map_period = period_array[iperiod]
         for icurve in range(ncurve):
             acurve = curve_data_array[icurve]
@@ -232,13 +237,12 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
                                              style_parameter['nan_value'],style_parameter['nan_color'])
         colorbar_left = np.linspace(color_min,color_max-color_step,ncolor)
         colorbar_right = np.linspace(color_min+color_step,color_max,ncolor)
-        colorbar_data_one_slice['colorbar_left'] = colorbar_left
-        colorbar_data_one_slice['colorbar_right'] = colorbar_right
         if one_slice_lat_list:
             map_data_all_slices_velocity.append(one_slice_vel_list)
             map_data_all_slices_period.append('Period: {0:6.1f} s'.format(map_period))
             map_data_all_slices_color.append(one_slice_color_list)
-            colorbar_data_all_slices_left_right.append(colorbar_data_one_slice)
+            colorbar_data_all_left.append(colorbar_left)
+            colorbar_data_all_right.append(colorbar_right)
     # get location for all points
     map_lat_list, map_lon_list = [], []
     map_lat_label_list, map_lon_label_list = [], []
@@ -251,7 +255,7 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
     # data for the map view plot
     map_view_label_lon = style_parameter['map_view_period_label_lon']
     map_view_label_lat = style_parameter['map_view_period_label_lat']
-    
+
     map_data_one_slice = map_data_all_slices_color[style_parameter['map_view_default_index']]
     map_data_one_slice_period = map_data_all_slices_period[style_parameter['map_view_default_index']]
     map_data_one_slice_bokeh = ColumnDataSource(data=dict(map_lat_list=map_lat_list,\
@@ -261,12 +265,17 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
                                                        map_period=[map_data_one_slice_period]))
     map_data_all_slices_bokeh = ColumnDataSource(data=dict(map_data_all_slices_color=map_data_all_slices_color,\
                                                           map_data_all_slices_period=map_data_all_slices_period))
-    
+
     # data for the colorbar
-    colorbar_data_one_slice = colorbar_data_all_slices_left_right[style_parameter['map_view_default_index']]
-    colorbar_data_one_slice_bokeh = ColumnDataSource(data=dict(colorbar_left=colorbar_data_one_slice['colorbar_left'],\
-                                                               colorbar_right=colorbar_data_one_slice['colorbar_right']))
-    colorbar_data_all_slices_left_right_bokeh = ColumnDataSource(data=dict(colorbar_data_all_slices_left_right=colorbar_data_all_slices_left_right))
+    colorbar_data_one_slice = {}
+    colorbar_data_one_slice['colorbar_left'] = colorbar_data_all_left[style_parameter['map_view_default_index']]
+    colorbar_data_one_slice['colorbar_right'] = colorbar_data_all_right[style_parameter['map_view_default_index']]
+    colorbar_data_one_slice_bokeh = ColumnDataSource(data=dict(colorbar_top=colorbar_top,colorbar_bottom=colorbar_bottom,
+                                                               colorbar_left=colorbar_data_one_slice['colorbar_left'],\
+                                                               colorbar_right=colorbar_data_one_slice['colorbar_right'],\
+                                                               palette_r=palette_r))
+    colorbar_data_all_slices_bokeh = ColumnDataSource(data=dict(colorbar_data_all_left=colorbar_data_all_left,\
+                                                                colorbar_data_all_right=colorbar_data_all_right))
     # data for dispersion curves
     curve_default_index = style_parameter['curve_default_index']
     selected_dot_on_map_bokeh = ColumnDataSource(data=dict(lat=[map_lat_list[curve_default_index]],\
@@ -277,10 +286,19 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
     selected_curve_data_bokeh = ColumnDataSource(data=dict(curve_period=selected_curve_data['period'],\
                                                           curve_velocity=selected_curve_data['velocity']))
 
-    curve_data_all_bokeh = ColumnDataSource(data=dict(curve_data_array=curve_data_array))
+    period_all = []
+    velocity_all = []
+    for acurve in curve_data_array:
+        period_all.append(acurve['period'])
+        velocity_all.append(acurve['velocity'])
+    curve_data_all_bokeh = ColumnDataSource(data=dict(period_all=period_all, velocity_all=velocity_all))
     
-    selected_curve_lat_label_bokeh = ColumnDataSource(data=dict(lat_label=[map_lat_label_list[curve_default_index]]))
-    selected_curve_lon_label_bokeh = ColumnDataSource(data=dict(lon_label=[map_lon_label_list[curve_default_index]]))
+    selected_curve_lat_label_bokeh = ColumnDataSource(data=dict(x=[style_parameter['curve_lat_label_x']], \
+                                                                y=[style_parameter['curve_lat_label_y']],\
+                                                                lat_label=[map_lat_label_list[curve_default_index]]))
+    selected_curve_lon_label_bokeh = ColumnDataSource(data=dict(x=[style_parameter['curve_lon_label_x']], \
+                                                                y=[style_parameter['curve_lon_label_y']],\
+                                                                lon_label=[map_lon_label_list[curve_default_index]]))
     all_curve_lat_label_bokeh = ColumnDataSource(data=dict(map_lat_label_list=map_lat_label_list))
     all_curve_lon_label_bokeh = ColumnDataSource(data=dict(map_lon_label_list=map_lon_label_list))
     # ==============================
@@ -295,19 +313,23 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
     # country boundaries
     map_view.multi_line(boundary_data['country']['longitude'],\
                         boundary_data['country']['latitude'],color='black',\
-                        line_width=2, level='underlay')
+                        line_width=2, level='underlay',nonselection_line_alpha=1.0,\
+                        nonselection_line_color='black')
     # marine boundaries
     map_view.multi_line(boundary_data['marine']['longitude'],\
                         boundary_data['marine']['latitude'],color='black',\
-                        level='underlay')
+                        level='underlay',nonselection_line_alpha=1.0,\
+                        nonselection_line_color='black')
     # shoreline boundaries
     map_view.multi_line(boundary_data['shoreline']['longitude'],\
                         boundary_data['shoreline']['latitude'],color='black',\
-                        line_width=2, level='underlay')
+                        line_width=2, level='underlay',nonselection_line_alpha=1.0,\
+                        nonselection_line_color='black')
     # state boundaries
     map_view.multi_line(boundary_data['state']['longitude'],\
                         boundary_data['state']['latitude'],color='black',\
-                        level='underlay')
+                        level='underlay',nonselection_line_alpha=1.0,\
+                        nonselection_line_color='black')
     # ------------------------------
     # add period label
     map_view.rect(style_parameter['map_view_period_box_lon'], style_parameter['map_view_period_box_lat'], \
@@ -350,8 +372,8 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
     colorbar_fig = Figure(tools=[], y_range=(0,0.1),plot_width=style_parameter['map_view_plot_width'], \
                           plot_height=style_parameter['colorbar_plot_height'],title=style_parameter['colorbar_title'])
     colorbar_fig.toolbar_location=None
-    colorbar_fig.quad(top=colorbar_top,bottom=colorbar_bottom,left='colorbar_left',right='colorbar_right',\
-                      color=palette_r,source=colorbar_data_one_slice_bokeh)
+    colorbar_fig.quad(top='colorbar_top',bottom='colorbar_bottom',left='colorbar_left',right='colorbar_right',\
+                      fill_color='palette_r',source=colorbar_data_one_slice_bokeh)
     colorbar_fig.yaxis[0].ticker=FixedTicker(ticks=[])
     colorbar_fig.xgrid.grid_line_color = None
     colorbar_fig.ygrid.grid_line_color = None
@@ -371,9 +393,9 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
     curve_fig.rect([style_parameter['curve_label_box_x']], [style_parameter['curve_label_box_y']], \
                    width=style_parameter['curve_label_box_width'], height=style_parameter['curve_label_box_height'], \
                    width_units='screen', height_units='screen', color='#FFFFFF', line_width=1., line_color='black', level='underlay')
-    curve_fig.text([style_parameter['curve_lat_label_x']], [style_parameter['curve_lat_label_y']], \
+    curve_fig.text('x', 'y', \
                    'lat_label', source=selected_curve_lat_label_bokeh)
-    curve_fig.text([style_parameter['curve_lon_label_x']], [style_parameter['curve_lon_label_y']], \
+    curve_fig.text('x', 'y', \
                    'lon_label', source=selected_curve_lon_label_bokeh)
     # ------------------------------
     curve_fig.line('curve_period', 'curve_velocity', source=selected_curve_data_bokeh, color='black')
@@ -406,70 +428,65 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
                                                           all_curve_lat_label_bokeh=all_curve_lat_label_bokeh,\
                                                           all_curve_lon_label_bokeh=all_curve_lon_label_bokeh), code="""
     
-    var inds = cb_obj.get('selected')['1d'].indices
+    var inds = Math.round(cb_obj.selected['1d'].indices)
     
-    selected_dot_on_map_bokeh.get('data')['index'] = [inds]
+    selected_dot_on_map_bokeh.data['index'] = [inds]
     
-    var new_slice = map_data_one_slice_bokeh.get('data')
+    var new_slice = map_data_one_slice_bokeh.data
     
-    selected_dot_on_map_bokeh.get('data')['lat'] = [new_slice['map_lat_list'][inds]]
-    selected_dot_on_map_bokeh.get('data')['lon'] = [new_slice['map_lon_list'][inds]]
-    selected_dot_on_map_bokeh.get('data')['color'] = [new_slice['map_data_one_slice'][inds]]
+    selected_dot_on_map_bokeh.data['lat'] = [new_slice['map_lat_list'][inds]]
+    selected_dot_on_map_bokeh.data['lon'] = [new_slice['map_lon_list'][inds]]
+    selected_dot_on_map_bokeh.data['color'] = [new_slice['map_data_one_slice'][inds]]
     
-    selected_dot_on_map_bokeh.trigger('change')
+    selected_dot_on_map_bokeh.change.emit()
     
-    var all_curves = curve_data_all_bokeh.get('data')['curve_data_array']
+    selected_curve_data_bokeh.data['curve_period'] = curve_data_all_bokeh.data['period_all'][inds]
+    selected_curve_data_bokeh.data['curve_velocity'] = curve_data_all_bokeh.data['velocity_all'][inds]
     
-    var new_curve = all_curves[inds]
+    selected_curve_data_bokeh.change.emit()
     
-    selected_curve_data_bokeh.get('data')['curve_period'] = new_curve['period']
-    selected_curve_data_bokeh.get('data')['curve_velocity'] = new_curve['velocity']
+    var all_lat_labels = all_curve_lat_label_bokeh.data['map_lat_label_list']
+    var all_lon_labels = all_curve_lon_label_bokeh.data['map_lon_label_list']
     
-    selected_curve_data_bokeh.trigger('change')
+    selected_curve_lat_label_bokeh.data['lat_label'] = [all_lat_labels[inds]]
+    selected_curve_lon_label_bokeh.data['lon_label'] = [all_lon_labels[inds]]
     
-    var all_lat_labels = all_curve_lat_label_bokeh.get('data')['map_lat_label_list']
-    var all_lon_labels = all_curve_lon_label_bokeh.get('data')['map_lon_label_list']
-    
-    selected_curve_lat_label_bokeh.get('data')['lat_label'] = [all_lat_labels[inds]]
-    selected_curve_lon_label_bokeh.get('data')['lon_label'] = [all_lon_labels[inds]]
-    
-    selected_curve_lat_label_bokeh.trigger('change')
-    selected_curve_lon_label_bokeh.trigger('change')
+    selected_curve_lat_label_bokeh.change.emit()
+    selected_curve_lon_label_bokeh.change.emit()
     """)
     # ==============================
     period_slider_callback = CustomJS(args=dict(map_data_all_slices_bokeh=map_data_all_slices_bokeh,\
                                   map_data_one_slice_bokeh=map_data_one_slice_bokeh,\
-                                  colorbar_data_all_slices_left_right_bokeh=colorbar_data_all_slices_left_right_bokeh,\
+                                  colorbar_data_all_slices_bokeh=colorbar_data_all_slices_bokeh, \
                                   colorbar_data_one_slice_bokeh=colorbar_data_one_slice_bokeh,\
                                   selected_dot_on_map_bokeh=selected_dot_on_map_bokeh,\
                                   map_data_one_slice_period_bokeh=map_data_one_slice_period_bokeh),\
                        code="""
-    var p_index = period_index.get('value')
-    var map_data_all_slices = map_data_all_slices_bokeh.get('data')
+    var p_index = Math.round(cb_obj.value)
+    var map_data_all_slices = map_data_all_slices_bokeh.data
     
     
     var map_data_new_slice = map_data_all_slices['map_data_all_slices_color'][p_index]
-    map_data_one_slice_bokeh.get('data')['map_data_one_slice'] = map_data_new_slice
-    map_data_one_slice_bokeh.trigger('change')
+    map_data_one_slice_bokeh.data['map_data_one_slice'] = map_data_new_slice
+    map_data_one_slice_bokeh.change.emit()
     
-    var color_data_all_slices = colorbar_data_all_slices_left_right_bokeh.get('data')['colorbar_data_all_slices_left_right']
-    var colorbar_data_new_slice = color_data_all_slices[p_index]
-    colorbar_data_one_slice_bokeh.get('data')['colorbar_left'] = colorbar_data_new_slice['colorbar_left']
-    colorbar_data_one_slice_bokeh.get('data')['colorbar_right'] = colorbar_data_new_slice['colorbar_right']
-    colorbar_data_one_slice_bokeh.trigger('change')
+    var color_data_all_slices = colorbar_data_all_slices_bokeh.data
+    colorbar_data_one_slice_bokeh.data['colorbar_left'] = color_data_all_slices['colorbar_data_all_left'][p_index]
+    colorbar_data_one_slice_bokeh.data['colorbar_right'] = color_data_all_slices['colorbar_data_all_right'][p_index]
+    colorbar_data_one_slice_bokeh.change.emit()
     
-    var selected_index = selected_dot_on_map_bokeh.get('data')['index']
-    selected_dot_on_map_bokeh.get('data')['color'] = [map_data_new_slice[selected_index]]
-    selected_dot_on_map_bokeh.trigger('change')
+    var selected_index = selected_dot_on_map_bokeh.data['index']
+    selected_dot_on_map_bokeh.data['color'] = [map_data_new_slice[selected_index]]
+    selected_dot_on_map_bokeh.change.emit()
     
-    map_data_one_slice_period_bokeh.get('data')['map_period'] = [map_data_all_slices['map_data_all_slices_period'][p_index]]
-    map_data_one_slice_period_bokeh.trigger('change')
+    map_data_one_slice_period_bokeh.data['map_period'] = [map_data_all_slices['map_data_all_slices_period'][p_index]]
+    map_data_one_slice_period_bokeh.change.emit()
     """)
     period_slider = Slider(start=0, end=nperiod-1, value=style_parameter['map_view_default_index'], \
                            step=1, title=style_parameter['period_slider_title'], \
                            width=style_parameter['period_slider_plot_width'],\
                            height=50, callback=period_slider_callback)
-    period_slider_callback.args['period_index'] = period_slider
+    
     # ==============================
     curve_slider_callback = CustomJS(args=dict(selected_dot_on_map_bokeh=selected_dot_on_map_bokeh,\
                                               map_data_one_slice_bokeh=map_data_one_slice_bokeh,\
@@ -480,39 +497,35 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
                                               all_curve_lat_label_bokeh=all_curve_lat_label_bokeh,\
                                               all_curve_lon_label_bokeh=all_curve_lon_label_bokeh),\
                                     code="""
-    var c_index = curve_index.get('value')
+    var c_index = Math.round(cb_obj.value)
     
-    var one_slice = map_data_one_slice_bokeh.get('data')
+    var one_slice = map_data_one_slice_bokeh.data
     
-    selected_dot_on_map_bokeh.get('data')['index'] = [c_index]
-    selected_dot_on_map_bokeh.get('data')['lat'] = [one_slice['map_lat_list'][c_index]]
-    selected_dot_on_map_bokeh.get('data')['lon'] = [one_slice['map_lon_list'][c_index]]
-    selected_dot_on_map_bokeh.get('data')['color'] = [one_slice['map_data_one_slice'][c_index]]
+    selected_dot_on_map_bokeh.data['index'] = [c_index]
+    selected_dot_on_map_bokeh.data['lat'] = [one_slice['map_lat_list'][c_index]]
+    selected_dot_on_map_bokeh.data['lon'] = [one_slice['map_lon_list'][c_index]]
+    selected_dot_on_map_bokeh.data['color'] = [one_slice['map_data_one_slice'][c_index]]
     
-    selected_dot_on_map_bokeh.trigger('change')
+    selected_dot_on_map_bokeh.change.emit()
     
-    var all_curves = curve_data_all_bokeh.get('data')['curve_data_array']
+    selected_curve_data_bokeh.data['curve_period'] = curve_data_all_bokeh.data['period_all'][c_index]
+    selected_curve_data_bokeh.data['curve_velocity'] = curve_data_all_bokeh.data['velocity_all'][c_index]
     
-    var new_curve = all_curves[c_index]
+    selected_curve_data_bokeh.change.emit()
     
-    selected_curve_data_bokeh.get('data')['curve_period'] = new_curve['period']
-    selected_curve_data_bokeh.get('data')['curve_velocity'] = new_curve['velocity']
+    var all_lat_labels = all_curve_lat_label_bokeh.data['map_lat_label_list']
+    var all_lon_labels = all_curve_lon_label_bokeh.data['map_lon_label_list']
     
-    selected_curve_data_bokeh.trigger('change')
+    selected_curve_lat_label_bokeh.data['lat_label'] = [all_lat_labels[c_index]]
+    selected_curve_lon_label_bokeh.data['lon_label'] = [all_lon_labels[c_index]]
     
-    var all_lat_labels = all_curve_lat_label_bokeh.get('data')['map_lat_label_list']
-    var all_lon_labels = all_curve_lon_label_bokeh.get('data')['map_lon_label_list']
-    
-    selected_curve_lat_label_bokeh.get('data')['lat_label'] = [all_lat_labels[c_index]]
-    selected_curve_lon_label_bokeh.get('data')['lon_label'] = [all_lon_labels[c_index]]
-    
-    selected_curve_lat_label_bokeh.trigger('change')
-    selected_curve_lon_label_bokeh.trigger('change')
+    selected_curve_lat_label_bokeh.change.emit()
+    selected_curve_lon_label_bokeh.change.emit()
     """)
     curve_slider = Slider(start=0, end=ncurve-1, value=style_parameter['curve_default_index'], \
                           step=1, title=style_parameter['curve_slider_title'], width=style_parameter['curve_plot_width'],\
                           height=50, callback=curve_slider_callback)
-    curve_slider_callback.args['curve_index'] = curve_slider
+    
     # ==============================
     # annotating text
     annotating_fig01 = Div(text=style_parameter['annotating_html01'], \
@@ -521,11 +534,11 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
         width=style_parameter['annotation_plot_width'], height=style_parameter['annotation_plot_height'])
     # ==============================
     output_file(filename,title=style_parameter['html_title'],mode=style_parameter['library_source'])
-    left_fig = VBox(period_slider, map_view, colorbar_fig, annotating_fig01,\
+    left_fig = Column(period_slider, map_view, colorbar_fig, annotating_fig01,\
                     width=style_parameter['left_column_width'] )
-    right_fig = VBox(curve_slider, curve_fig, annotating_fig02, \
+    right_fig = Column(curve_slider, curve_fig, annotating_fig02, \
                     width=style_parameter['right_column_width'] )
-    layout = HBox(left_fig, right_fig)
+    layout = Row(left_fig, right_fig)
     save(layout)
 # ========================================================
 if __name__ == '__main__':
