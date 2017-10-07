@@ -73,7 +73,7 @@ The text file contains 900 1D velocity profles for 1-degree-by-1-degree cells. T
 
 For each profile, the first line is number of layers. In our example, the number of layers is 99. The lines followint the first line are model parameters for each layer. The first column is layer number. The second column is Vp in km/s. The third column is Vs in km/s. The 4th column is density in g/cm^3. The 5th column is layer thickness in km. The last column is depth from surface to the layer top in km. Other columns are not used.
 
-[//]: ![image](DynamicViz/Figures/Model_viewer.png)
+[//]: ![image](https://github.com/ccp137/DynamicViz/blob/master/Figures/Model_viewer.png)
 
 
 ### Available Options
