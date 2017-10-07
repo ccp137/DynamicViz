@@ -2,13 +2,17 @@
 # 
 # by Chengping Chai, Penn State, 2016
 # 
-# Version 1.0
+# Version 1.1
 #
-# This script is prepared for a paper named as Interactive Seismic Visualization Using HTML.
+# Updates:
+#       V1.1, Chengping Chai, University of Tennessee, September 20, 2017
+#         minor changes for bokeh 0.12.9
+#
+# This script is prepared for a paper named as Interactive Seismic Visualization Using Bokeh submitted to SRL.
 #
 # Requirement:
 #       numpy 1.10.4
-#       bokeh 0.12.0
+#       bokeh 0.12.9
 #
 import numpy as np
 from bokeh.plotting import Figure, output_file, save
@@ -16,7 +20,7 @@ from bokeh.plotting import ColumnDataSource
 from bokeh.palettes import RdYlBu11 as palette
 from bokeh.models.widgets import Slider
 from bokeh.models import CustomJS
-from bokeh.models import HBox, VBox
+from bokeh.models import Column, Row
 from bokeh.models import FixedTicker, PrintfTickFormatter
 from bokeh.models.widgets import Div
 from utility import *
@@ -263,7 +267,6 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
                                                           map_data_all_slices_period=map_data_all_slices_period))
 
     # data for the colorbar
-<<<<<<< HEAD
     colorbar_data_one_slice = {}
     colorbar_data_one_slice['colorbar_left'] = colorbar_data_all_left[style_parameter['map_view_default_index']]
     colorbar_data_one_slice['colorbar_right'] = colorbar_data_all_right[style_parameter['map_view_default_index']]
@@ -273,12 +276,6 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
                                                                palette_r=palette_r))
     colorbar_data_all_slices_bokeh = ColumnDataSource(data=dict(colorbar_data_all_left=colorbar_data_all_left,\
                                                                 colorbar_data_all_right=colorbar_data_all_right))
-=======
-    colorbar_data_one_slice = colorbar_data_all_slices_left_right[style_parameter['map_view_default_index']]
-    colorbar_data_one_slice_bokeh = ColumnDataSource(data=dict(colorbar_left=colorbar_data_one_slice['colorbar_left'],\
-                                                               colorbar_right=colorbar_data_one_slice['colorbar_right']))
-    colorbar_data_all_slices_left_right_bokeh = ColumnDataSource(data=dict(colorbar_data_all_slices_left_right=colorbar_data_all_slices_left_right))
->>>>>>> parent of 3c94b7b... update files
     # data for dispersion curves
     curve_default_index = style_parameter['curve_default_index']
     selected_dot_on_map_bokeh = ColumnDataSource(data=dict(lat=[map_lat_list[curve_default_index]],\
@@ -296,8 +293,12 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
         velocity_all.append(acurve['velocity'])
     curve_data_all_bokeh = ColumnDataSource(data=dict(period_all=period_all, velocity_all=velocity_all))
     
-    selected_curve_lat_label_bokeh = ColumnDataSource(data=dict(lat_label=[map_lat_label_list[curve_default_index]]))
-    selected_curve_lon_label_bokeh = ColumnDataSource(data=dict(lon_label=[map_lon_label_list[curve_default_index]]))
+    selected_curve_lat_label_bokeh = ColumnDataSource(data=dict(x=[style_parameter['curve_lat_label_x']], \
+                                                                y=[style_parameter['curve_lat_label_y']],\
+                                                                lat_label=[map_lat_label_list[curve_default_index]]))
+    selected_curve_lon_label_bokeh = ColumnDataSource(data=dict(x=[style_parameter['curve_lon_label_x']], \
+                                                                y=[style_parameter['curve_lon_label_y']],\
+                                                                lon_label=[map_lon_label_list[curve_default_index]]))
     all_curve_lat_label_bokeh = ColumnDataSource(data=dict(map_lat_label_list=map_lat_label_list))
     all_curve_lon_label_bokeh = ColumnDataSource(data=dict(map_lon_label_list=map_lon_label_list))
     # ==============================
@@ -312,19 +313,23 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
     # country boundaries
     map_view.multi_line(boundary_data['country']['longitude'],\
                         boundary_data['country']['latitude'],color='black',\
-                        line_width=2, level='underlay')
+                        line_width=2, level='underlay',nonselection_line_alpha=1.0,\
+                        nonselection_line_color='black')
     # marine boundaries
     map_view.multi_line(boundary_data['marine']['longitude'],\
                         boundary_data['marine']['latitude'],color='black',\
-                        level='underlay')
+                        level='underlay',nonselection_line_alpha=1.0,\
+                        nonselection_line_color='black')
     # shoreline boundaries
     map_view.multi_line(boundary_data['shoreline']['longitude'],\
                         boundary_data['shoreline']['latitude'],color='black',\
-                        line_width=2, level='underlay')
+                        line_width=2, level='underlay',nonselection_line_alpha=1.0,\
+                        nonselection_line_color='black')
     # state boundaries
     map_view.multi_line(boundary_data['state']['longitude'],\
                         boundary_data['state']['latitude'],color='black',\
-                        level='underlay')
+                        level='underlay',nonselection_line_alpha=1.0,\
+                        nonselection_line_color='black')
     # ------------------------------
     # add period label
     map_view.rect(style_parameter['map_view_period_box_lon'], style_parameter['map_view_period_box_lat'], \
@@ -367,13 +372,8 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
     colorbar_fig = Figure(tools=[], y_range=(0,0.1),plot_width=style_parameter['map_view_plot_width'], \
                           plot_height=style_parameter['colorbar_plot_height'],title=style_parameter['colorbar_title'])
     colorbar_fig.toolbar_location=None
-<<<<<<< HEAD
     colorbar_fig.quad(top='colorbar_top',bottom='colorbar_bottom',left='colorbar_left',right='colorbar_right',\
                       fill_color='palette_r',source=colorbar_data_one_slice_bokeh)
-=======
-    colorbar_fig.quad(top=colorbar_top,bottom=colorbar_bottom,left='colorbar_left',right='colorbar_right',\
-                      color=palette_r,source=colorbar_data_one_slice_bokeh)
->>>>>>> parent of 3c94b7b... update files
     colorbar_fig.yaxis[0].ticker=FixedTicker(ticks=[])
     colorbar_fig.xgrid.grid_line_color = None
     colorbar_fig.ygrid.grid_line_color = None
@@ -393,9 +393,9 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
     curve_fig.rect([style_parameter['curve_label_box_x']], [style_parameter['curve_label_box_y']], \
                    width=style_parameter['curve_label_box_width'], height=style_parameter['curve_label_box_height'], \
                    width_units='screen', height_units='screen', color='#FFFFFF', line_width=1., line_color='black', level='underlay')
-    curve_fig.text([style_parameter['curve_lat_label_x']], [style_parameter['curve_lat_label_y']], \
+    curve_fig.text('x', 'y', \
                    'lat_label', source=selected_curve_lat_label_bokeh)
-    curve_fig.text([style_parameter['curve_lon_label_x']], [style_parameter['curve_lon_label_y']], \
+    curve_fig.text('x', 'y', \
                    'lon_label', source=selected_curve_lon_label_bokeh)
     # ------------------------------
     curve_fig.line('curve_period', 'curve_velocity', source=selected_curve_data_bokeh, color='black')
@@ -534,11 +534,11 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
         width=style_parameter['annotation_plot_width'], height=style_parameter['annotation_plot_height'])
     # ==============================
     output_file(filename,title=style_parameter['html_title'],mode=style_parameter['library_source'])
-    left_fig = VBox(period_slider, map_view, colorbar_fig, annotating_fig01,\
+    left_fig = Column(period_slider, map_view, colorbar_fig, annotating_fig01,\
                     width=style_parameter['left_column_width'] )
-    right_fig = VBox(curve_slider, curve_fig, annotating_fig02, \
+    right_fig = Column(curve_slider, curve_fig, annotating_fig02, \
                     width=style_parameter['right_column_width'] )
-    layout = HBox(left_fig, right_fig)
+    layout = Row(left_fig, right_fig)
     save(layout)
 # ========================================================
 if __name__ == '__main__':
