@@ -1,10 +1,10 @@
 # Waveform Interactive Viewer
 # 
-# by Chengping Chai, University of Tennessee, 2017
+# by Chengping Chai, University of Tennessee, October 4, 2017
 # 
-# Version 1.0
+# Version 1.2
 #
-# This script is prepared for a paper named as Interactive Seismic Visualization Using HTML.
+# This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh submitted to SRL.
 #
 # Requirement:
 #       numpy 1.10.4
@@ -118,7 +118,7 @@ def plot_waveform_bokeh(filename,waveform_list,metadata_list,station_lat_list,\
                       plot_height=style_parameter['map_view_plot_height'], \
                       y_range=[style_parameter['map_view_lat_min'],\
                     style_parameter['map_view_lat_max']], x_range=[style_parameter['map_view_lon_min'],\
-                    style_parameter['map_view_lon_max']], tools=['tap','save','crosshair'],\
+                    style_parameter['map_view_lon_max']], tools=style_parameter['map_view_tools'],\
                     title=style_parameter['map_view_title'])
     # ------------------------------
     # add boundaries to map view
@@ -144,14 +144,14 @@ def plot_waveform_bokeh(filename,waveform_list,metadata_list,station_lat_list,\
                         nonselection_line_color='gray')
     #
     map_view.triangle('map_lon_list', 'map_lat_list', source=map_station_location_bokeh, \
-                      line_color='gray', size=15, fill_color='black',\
+                      line_color='gray', size=style_parameter['marker_size'], fill_color='black',\
                       selection_color='black', selection_line_color='gray',\
                       selection_fill_alpha=1.0,\
                       nonselection_fill_alpha=1.0, nonselection_fill_color='black',\
                       nonselection_line_color='gray', nonselection_line_alpha=1.0)
     map_view.triangle('lon','lat', source=selected_dot_on_map_bokeh,\
-                      size=20, line_color='black',fill_color='red')
-    map_view.asterisk([event_lon], [event_lat], size=20, line_width=3, line_color='red', \
+                      size=style_parameter['selected_marker_size'], line_color='black',fill_color='red')
+    map_view.asterisk([event_lon], [event_lat], size=style_parameter['event_marker_size'], line_width=3, line_color='red', \
                       fill_color='red')
     # change style
     map_view.title.text_font_size = style_parameter['title_font_size']
@@ -443,7 +443,7 @@ def plot_waveform_bokeh(filename,waveform_list,metadata_list,station_lat_list,\
     annotating_fig02 = Div(text=style_parameter['annotating_html02'],\
         width=style_parameter['annotation_plot_width'], height=style_parameter['annotation_plot_height'])
     # ==============================
-    output_file(filename, title=style_parameter['html_title'])
+    output_file(filename,title=style_parameter['html_title'],mode=style_parameter['library_source'])
     #
     left_fig = Column(curve_slider, map_view, annotating_fig01, width=style_parameter['left_column_width'] )
     
@@ -457,6 +457,9 @@ if __name__ == '__main__':
     style_parameter['html_title'] = 'Waveform Viewer'
     style_parameter['xlabel_fontsize'] = '12pt'
     style_parameter['title_font_size'] = '14pt'
+    style_parameter['marker_size'] = 15
+    style_parameter['selected_marker_size'] = 20 
+    style_parameter['event_marker_size'] = 20
     style_parameter['map_view_lat_min'] = 25.0
     style_parameter['map_view_lat_max'] = 45.0
     style_parameter['map_view_lon_min'] = -110.0
@@ -464,10 +467,9 @@ if __name__ == '__main__':
     style_parameter['map_view_plot_width'] = (110-86)*25
     style_parameter['map_view_plot_height'] = (45-25)*30
     style_parameter['map_view_title'] = 'Station Map'
+    style_parameter['map_view_tools'] = ['tap','save','crosshair']
     style_parameter['map_view_xlabel'] = 'Longitude (degree)'
     style_parameter['map_view_ylabel'] = 'Latitude (degree)'
-    style_parameter['left_column_width'] = 750
-    style_parameter['right_column_width'] = 680
     style_parameter['curve_title'] = 'Waveform'
     style_parameter['curve_xlabel'] = 'Time (s)'
     style_parameter['curve_ylabel'] = 'Displacement (m)'
@@ -479,6 +481,7 @@ if __name__ == '__main__':
     style_parameter['curve_reftime_label_y'] = -0.001
     style_parameter['curve_channel_label_x'] = 500
     style_parameter['curve_channel_label_y'] = 0.0005
+
     style_parameter['annotation_plot_width'] = 750
     style_parameter['annotation_plot_height'] = 150
     style_parameter['annotating_html01'] = """<p style="font-size:16px">
@@ -488,12 +491,17 @@ if __name__ == '__main__':
         </p>"""
     style_parameter['annotating_html02'] = """<p style="font-size:16px">
         </p>"""
+    style_parameter['left_column_width'] = 750
+    style_parameter['right_column_width'] = 680
+    # inline for embeded libaries; CDN for online libaries
+    style_parameter['library_source'] = 'inline' # 'CDN' 
+    style_parameter['waveform_folder'] = './WaveformData/'
+    style_parameter['html_filename'] =  'waveform_viewer.html'
+    #
     boundary_data = read_boundary_data()
     #
     station_lat_list, station_lon_list, event_lat, event_lon, \
-    waveform_list, metadata_list = read_waveform_from_sac('./WaveformData/*.sac')
+    waveform_list, metadata_list = read_waveform_from_sac(style_parameter['waveform_folder']+'/*.sac')
     #
-    html_filename = 'waveform_viewer.html'
-    #
-    plot_waveform_bokeh(html_filename,waveform_list,metadata_list,station_lat_list,\
+    plot_waveform_bokeh(style_parameter['html_filename'],waveform_list,metadata_list,station_lat_list,\
         station_lon_list, event_lat, event_lon, boundary_data, style_parameter)

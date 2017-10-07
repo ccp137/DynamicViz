@@ -2,13 +2,13 @@
 # 
 # by Chengping Chai, Penn State, 2016
 # 
-# Version 1.1
+# Version 1.2
 #
 # Updates:
 #       V1.1, Chengping Chai, University of Tennessee, September 20, 2017
 #         minor changes for bokeh 0.12.9
 #
-# This script is prepared for a paper named as Interactive Seismic Visualization Using Bokeh submitted to SRL.
+# This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh submitted to SRL.
 #
 # Requirement:
 #       numpy 1.10.4
@@ -306,7 +306,7 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
                       plot_height=style_parameter['map_view_plot_height'], \
                       y_range=[style_parameter['map_view_lat_min'],\
                     style_parameter['map_view_lat_max']], x_range=[style_parameter['map_view_lon_min'],\
-                    style_parameter['map_view_lon_max']], tools=['tap','save','crosshair'],\
+                    style_parameter['map_view_lon_max']], tools=style_parameter['map_view_tools'],\
                     title=style_parameter['map_view_title'])
     # ------------------------------
     # add boundaries to map view
@@ -558,6 +558,7 @@ if __name__ == '__main__':
     style_parameter['map_view_plot_width'] = 500
     style_parameter['map_view_plot_height'] = 550
     style_parameter['map_view_title'] = 'Dispersion Map'
+    style_parameter['map_view_tools'] = ['tap','save','crosshair']
     style_parameter['map_view_xlabel'] = 'Longitude (degree)'
     style_parameter['map_view_ylabel'] = 'Latitude (degree)'
     style_parameter['map_view_default_index'] = 5
@@ -615,9 +616,11 @@ if __name__ == '__main__':
     style_parameter['right_column_width'] = 650
     # inline for embeded libaries; CDN for online libaries
     style_parameter['library_source'] = 'inline' # 'CDN'  
+    style_parameter['dispersion_folder'] = './RAYLU/'
+    style_parameter['html_filename'] = 'dispersion_viewer.html'
     #
     # read dispersion data from text files, the data are saved for map view
-    period_array, period_map_point_array, period_map_data_array = read_all_period_data('./RAYLU/per.uniq')
+    period_array, period_map_point_array, period_map_data_array = read_all_period_data(style_parameter['dispersion_folder']+'/per.uniq')
     # get unique locations from the data
     unique_point_list = get_unique_locations(period_map_point_array)
     # sort unique locations
@@ -627,6 +630,6 @@ if __name__ == '__main__':
     # read boundary data
     boundary_data = read_boundary_data()
     # 
-    html_filename = 'dispersion_viewer.html'
+    
     # plot dispersion data using bokeh
     plot_dispersion_bokeh(html_filename, period_array, curve_data_array, boundary_data, style_parameter)

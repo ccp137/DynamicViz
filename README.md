@@ -2,9 +2,11 @@
 
 by Chengping Chai, Charles J. Ammon, Monica Meceria and Robert B. Herrmann
 
-This package contains source code and data for several examples of plotting 3D seismic models using HTML. We are using Python 2.7 for this package. In two examples, we use a dispersion model from Herrmann et al. (2013, http://www.eas.slu.edu/eqc/eqc_research/NATOMO/) and a 3D shear velocity model from Chai et al. ([GRL](http://onlinelibrary.wiley.com/doi/10.1002/2015GL063733/full), 2015, also at http://eqseis.geosc.psu.edu/~cchai/01research/01westernUS.html). The dispersion data and velocity model are included in the folders RAYLU and WUS-CAMH-2015, respectively. Another example plot waveform using SAC files (data can be found in the folder WaveformData). Our plots also use political boundaries and coastlines data that are prepared with GMT (http://gmt.soest.hawaii.edu/). The boundary data for U.S. region are provided in the utility folder.
+This package contains source code and data for four examples of plotting 3D seismic models and data using HTML. We are using Python 2.7 for this package. In two examples, we use a dispersion model from Herrmann et al. (2013, http://www.eas.slu.edu/eqc/eqc_research/NATOMO/) and a 3D shear velocity model from Chai et al. ([GRL](http://onlinelibrary.wiley.com/doi/10.1002/2015GL063733/full), 2015, also at http://eqseis.geosc.psu.edu/~cchai/01research/01westernUS.html). Another example can plot cross-scetions and depth slices side by side. The dispersion data and velocity model are included in the folders RAYLU and WUS-CAMH-2015, respectively. The fourth example plots waveform using SAC files (data can be found in the folder WaveformData). Our plots also use political boundaries and coastlines data that are prepared with GMT (http://gmt.soest.hawaii.edu/). The boundary data for U.S. region are provided in the utility folder.
 
 The python script plot_dispersion_as_html.py can be used to generate an interactive plot like WUS_dispersion_viewer.html in the Results folder. The python script plot_3D_model_as_html.py was used to generate a dynamic figure like WUS_model_viewer.html (in the Results folder). The script plot_waveform_as_html.py will plot seismograms from one event that are recorded on multiple three-component stations. The utility.py contains some Python functions used by the above scripts.
+
+-----
 
 ## Install Required Packages
 
@@ -27,7 +29,9 @@ conda config --add channels conda-forge
 conda install obspy
 ```
 
-## Run
+-----
+
+## Run Examples
 
 To generate the HTML file with map views and dispersion curves for the dispersion model, type the following command in your terminal.
 
@@ -53,14 +57,19 @@ The command below can be used to generate the HTML file to show three-component 
 python plot_waveforms_as_html.py
 ```
 
+-----
 
 ## Details on Velocity Model Viewer
 
-The Python script plot_3D_model_as_html.py reads in the 3D velocity model from a text file, plots the velocity model using the Bokeh package and save the model parameters as well as visulization in a HTML file. 
+The Python script plot_3D_model_as_html.py can read in the 3D velocity model from a text file, plot the velocity model using the Bokeh package and save the model parameters as well as visulization in a HTML file. In the resulting HTML files, you will see a depth slice map and a profile plot side by side. The depth of the depth slice and the location of the profile plot can be changed with slider bars. Alternatively, the profile location also change with a click on the slice map. A screenshot of the HTML file is shown below.
+
+![image](https://github.com/ccp137/DynamicViz/blob/master/Figures/Model_viewer.png)
 
 ### Work Flow
 
-The following figure shows a flow-chats on how we design the script.   
+The following figure shows the flow-chat on how we design the script.
+
+![image](https://github.com/ccp137/DynamicViz/blob/master/Figures/Flow_charts.png)   
 
 
 ### Format of the Text File (2015GL063733-ds02.txt)
@@ -73,7 +82,6 @@ The text file contains 900 1D velocity profles for 1-degree-by-1-degree cells. T
 
 For each profile, the first line is number of layers. In our example, the number of layers is 99. The lines followint the first line are model parameters for each layer. The first column is layer number. The second column is Vp in km/s. The third column is Vs in km/s. The 4th column is density in g/cm^3. The 5th column is layer thickness in km. The last column is depth from surface to the layer top in km. Other columns are not used.
 
-![image](https://github.com/ccp137/DynamicViz/blob/master/Figures/Model_viewer.png)
 
 
 ### Available Options
@@ -86,7 +94,7 @@ In the Python script (plot_3D_model_as_html.py), we provide many customizable op
 | xlabel_fontsize | fontsize of x axis label |
 | xtick_label_fontsize | fontsize of x axis ticks |
 | title_font_size | fontsize of the figure title |
-| annotating_text_font_size | fontsize of the annotating text |
+| annotating_text_font_size | fontsize of the label text |
 | map_view_ndepth | number of depth (horizontal layers) |
 | nlat | number of cells in latitude direction |
 | nlon | number of cells in longitude direction |
@@ -103,7 +111,7 @@ In the Python script (plot_3D_model_as_html.py), we provide many customizable op
 | map_view_title | title of the velocity map figure |
 | map_view_xlabel | x axis label of the velocity map figure |
 | map_view_ylabel | y axis label fo the velocity map figure |
-| map_view_tools | interactive tools used for the velocity map figure |
+| map_view_tools | interactive tools to be used for the velocity map figure |
 | map_view_default_index | depth index of the default (prior to clicking) velocity map |
 | map_view_depth_label_lon | longitude to place the depth label |
 | map_view_depth_label_lat | latitude to place the depth label |
@@ -125,7 +133,7 @@ In the Python script (plot_3D_model_as_html.py), we provide many customizable op
 | profile_plot_xmax | maximum x of the profile plot |
 | profile_plot_ymin | minimum y of the profile plot |
 | profile_plot_ymax | maximum y of the profile plot |
-| profile_plot_tools | interactive tools used for the profile plot |
+| profile_plot_tools | interactive tools to be used for the profile plot |
 | profile_title | title of the profile plot |
 | profile_lat_label_x | x of the latitiude label |
 | profile_lat_label_y | y of the latitude label |
@@ -156,8 +164,215 @@ In the Python script (plot_3D_model_as_html.py), we provide many customizable op
 * Map projections are not supported
 * Slider value does not change with click
 
+-----
+
+## Details on Cross-section Viewer
+
+The Python script plot_cross_sections_as_html.py can plot the 3D velocity model as depth slices and cross-sections side by side. The input file for this example is the same as the model viewer example. The output HTML allows user to slice the 3D model in three different directions. A screenshot of the HTML file is shown below.
+
+![image](https://github.com/ccp137/DynamicViz/blob/master/Figures/Cross_sections.png)
+
+### Available Options
+
+| Parameters of style_parameter | Functionality  |
+| --- | ---|
+| html_title | title of the HTML page tab |
+| xlabel_fontsize | fontsize of x axis label |
+| xtick_label_fontsize | fontsize of x axis ticks |
+| title_font_size | fontsize of the figure title |
+| annotating_text_font_size | fontsize of the label text |
+| map_view_ndepth | number of depth (horizontal layers) |
+| nlat | number of cells in latitude direction |
+| nlon | number of cells in longitude direction |
+| map_view_figure_lat_min | minimum latitude of the velocity map figure |
+| map_view_figure_lat_max | maximum latitude of the velocity map figure |
+| map_view_figure_lon_min | minimum longitude of the velocity map figure |
+| map_view_figure_lon_max | maximum longitude of the velocity map figure |
+| map_view_image_lat_min | minimum latitude of the velocity image |
+| map_view_image_lat_max | maximum latitude of the velocity image |
+| map_view_image_lon_min | minimum longitude of the velocity image |
+| map_view_image_lon_max | maximum longitude of the velocity image |
+| map_view_plot_width | width of the velocity map figure in pixel |
+| map_view_plot_height | height of the velocity map figure in pixel |
+| map_view_title | title of the velocity map figure |
+| map_view_xlabel | x axis label of the velocity map figure |
+| map_view_ylabel | y axis label fo the velocity map figure |
+| map_view_tools | interactive tools to be used for the velocity map figure |
+| map_view_default_index | depth index of the default (prior to clicking) velocity map |
+| map_view_depth_label_lon | longitude to place the depth label |
+| map_view_depth_label_lat | latitude to place the depth label |
+| map_view_depth_box_lon | longitude of the background box beneath the depth label |
+| map_view_depth_box_lat | latitude of the background box beneath the depth label |
+| map_view_depth_box_width | width of the background box in pixel |
+| map_view_depth_box_height | height of the background box in pixel |
+| map_view_grid_width| width of the rectangles that represent the model grid |
+| map_view_grid_height | height of the rectangles that represent the model grid | 
+| spread_factor | a constant used to control the spread of color scale |
+| min_vs_range | minimum spead allowed for the color scale |
+| colorbar_title | title of the colorbar |
+| colorbar_plot_height | height of the colorbar plot |
+| depth_slider_title | title of the depth slider bar |
+| profile_slider_title | title of the profile location slider |
+| annotation_plot_width | width of the annotating text at the bottom of the HTML page |
+| annotation_plot_height | height of the annotating text at the bottom of the HTML page |
+| annotating_html01 | content of the annotating text at the lower left corner |
+| cross_lat_plot_width | width of the cross-section along latitude in pixel |
+| cross_lat_plot_height | height of the cross-section along latitude in pixel |
+| cross_lat_default_index | index of the default view of the latitude cross-section |
+| lat_slider_title | title of the latitude slider bar |
+| cross_lat_view_label_lon | position (longitude value) of place the latitude label  |
+| cross_lat_view_lable_depth | position (depth value) of place the latitude label |
+| cross_view_vs_min | minimum of the color scale |
+| cross_view_vs_max | maximum of the color scale |
+| cross_lat_view_title | title of the cross-section plot along latitude |
+| cross_lat_view_tools | interactive tools to be used for the latitude cross-section |
+| cross_lon_plot_width | width of the cross-section along longitude in pixel |
+| cross_lon_plot_height | height of the cross-section along longitude in pixel |
+| cross_lon_default_index | index of the default view of the longitude cross-section |
+| lon_slider_title | title of the longitude slider bar |
+| cross_lon_view_label_lat | position (latitude value) of place the longitude label  |
+| cross_lon_view_lable_depth | position (depth value) of place the longitude label |
+| cross_lon_view_title | title of the cross-section plot along longitude |
+| cross_lon_view_tools | interactive tools to be used for the longitude cross-section |
+| left_column_width | width of the left part of the HTML page |
+| right_column_width | width of the right part of the HTML page |
+| library_source | include the Bokeh libraries in the HTML file (inline) or not (CDN) |
+| vmodel_filename | filename of the 3D velocity model |
+| html_filename | filename of the output HTML file |
+
+### Known Limitations
+
+* Map projections are not supported
+* Slider value does not change with click
+
+-----
+
 ## Details on Dispersion Viewer
 
+Another example can visualize dispersion models in map view and as dispersion curves on the same HTML page. A screenshot of the HTML file is shown below.
 
+![image](https://github.com/ccp137/DynamicViz/blob/master/Figures/Dispersion_viewer.png)
+
+### Available Options
+
+| Parameters of style_parameter | Functionality  |
+| --- | ---|
+| html_title | title of the HTML page tab |
+| xlabel_fontsize | fontsize of x axis label |
+| xtick_label_fontsize | fontsize of x axis ticks |
+| title_font_size | fontsize of the figure title |
+| annotating_text_font_size | fontsize of the label text |
+| marker_size | size of dots in the map view |
+| selected_marker_size | size of the selected dot in the map view |
+| map_view_lat_min | minimum latitude of the dispersion map figure |
+| map_view_lat_max | maximum latitude of the dispersion map figure |
+| map_view_lon_min | minimum longitude of the dispersion map figure |
+| map_view_lon_max | maximum longitude of the dispersion map figure |
+| map_view_plot_width | width of the dispersion map figure in pixel |
+| map_view_plot_height | height of the dispersion map figure in pixel |
+| map_view_title | title of the dispersion map figure |
+| map_view_tools | interactive tools to be used for the dispersion map plot |
+| map_view_xlabel | x axis label of the dispersion map figure |
+| map_view_ylabel | y axis label fo the dispersion map figure |
+| map_view_default_index | period index of the default (prior to clicking) dispersion map |
+| map_view_period_label_lon | position (longitude) of the period label in the map view plot | 
+| map_view_period_label_lat | position (latitude) of the period label in the map view plot |
+| map_view_period_box_lon | position (longitude) of the outline box for the period label |
+| map_view_period_box_lat | position (latitude) of the outline box for the period label|
+| map_view_period_box_width | width of the outline box for the period label |
+| map_view_period_box_height | height of the outline box for the period label |
+| nan_value | a value used to replace a missing data point |
+| nan_color | a color for missing data points |
+| spread_factor | a constant used to control the spread of color scale |
+| colorbar_title | title of the colorbar |
+| colorbar_plot_height | height of the colorbar plot |
+| period_slider_plot_width | width of the period slider bar |
+| period_slider_title | title of the period slider |
+| curve_default_index | default index of the dispersion curve |
+| curve_title | title of the dispersion curve plot |
+| curve_xlabel | x axis label of the dispersion curve plot |
+| curve_ylabel | y axis label of the dispersion curve plot |
+| curve_plot_width | width of the dispersion curve plot |
+| curve_plot_height | height of the dispersion curve plot |
+| curve_x_min | minimum of the x axis scale |
+| curve_x_max | maximum of the x axis scale |
+| curve_y_min | minimum of the y axis scale |
+| curve_y_max | maximum of the y axis scale |
+| curve_lat_label_x | position (x axis) of the latitude label |
+| curve_lat_label_y | position (y axis) of the latitude label |
+| curve_lon_label_x | position (x axis) of the longitude label |
+| curve_lon_label_y | position (y axis) of the longitude label |
+| curve_label_box_x | position (x axis) of the outline box for the latitude and longitude labels |
+| curve_label_box_y | position (y axis) of the outline box for the latitude and longitude labels |
+| curve_label_box_width | width of the outline box |
+| curve_lable_box_height | height of the outline box |
+| curve_slider_title | title of the curve slider bar |
+| annotation_plot_width | width of the annotating text at the bottom of the HTML page |
+| annotation_plot_height | height of the annotating text at the bottom of the HTML page |
+| annotating_html01 | content of the annotating text at the lower left corner |
+| annotating_html02 | content of the annotating text at the lower right corner |
+| left_column_width | width of the left part of the HTML page |
+| right_column_width | width of the right part of the HTML page |
+| library_source | include the Bokeh libraries in the HTML file (inline) or not (CDN) |
+| dispersion_folder | the folder for the dispersion model |
+| html_filename | filename of the output HTML file |  
+
+### Known Limitations
+
+* Map projections are not supported
+* Slider value does not change with click
+
+------
 
 ## Details on Waveform Viewer
+
+A screenshot of the HTML file is shown below.
+
+![image](https://github.com/ccp137/DynamicViz/blob/master/Figures/Waveform_viewer.png)
+
+### Available Options
+
+| Parameters of style_parameter | Functionality  |
+| --- | ---|
+| html_title | title of the HTML page tab |
+| xlabel_fontsize | fontsize of x axis label |
+| xtick_label_fontsize | fontsize of x axis ticks |
+| title_font_size | fontsize of the figure title |
+| marker_size | size of dots in the map view |
+| selected_marker_size | size of the selected dot in the map view |
+| event_marker_size | size of the event symbol in the map view |
+| map_view_lat_min | minimum latitude of the station map figure |
+| map_view_lat_max | maximum latitude of the station map figure |
+| map_view_lon_min | minimum longitude of the station map figure |
+| map_view_lon_max | maximum longitude of the station map figure |
+| map_view_plot_width | width of the station map figure in pixel |
+| map_view_plot_height | height of the station map figure in pixel |
+| map_view_title | title of the station map figure |
+| map_view_tools | interactive tools to be used for the station map plot |
+| map_view_xlabel | x axis label of the station map figure |
+| map_view_ylabel | y axis label fo the station map figure |
+| curve_title | title of the waveform plots |
+| curve_xlabel | x axis label of the waveform plots |
+| curve_ylabel | y axis label of the waveform plots |
+| curve_plot_width | width of the waveform plots |
+| curve_plot_height | height of the waveform plots |
+| curve_default_index | default index of the station that recored the seismograms |
+| curve_slider_title | 'title of the curve slider bar' |
+| curve_reftime_label_x | position (x) of the reference time label |
+| curve_reftime_label_y | position (y) of the reference time label |
+| curve_channel_label_x | position (x) of the channel label |
+| curve_channel_label_y | position (y) of the channel label |
+| annotation_plot_width | width of the annotating text at the bottom of the HTML page |
+| annotation_plot_height | height of the annotating text at the bottom of the HTML page |
+| annotating_html01 | content of the annotating text at the lower left corner |
+| annotating_html02 | content of the annotating text at the lower right corner |
+| left_column_width | width of the left part of the HTML page |
+| right_column_width | width of the right part of the HTML page |
+| library_source | include the Bokeh libraries in the HTML file (inline) or not (CDN) |
+| waveform_folder | the folder for the wavefom data |
+| html_filename | filename of the output HTML file |  
+
+### Known Limitations
+
+* Map projections are not supported
+* Slider value does not change with click

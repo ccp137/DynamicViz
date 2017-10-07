@@ -2,13 +2,13 @@
 # 
 # by Chengping Chai, Penn State, 2016
 # 
-# Version 1.1
+# Version 1.2
 #
 # Updates:
 #       V1.1, Chengping Chai, University of Tennessee, October 2, 2017
-#         minor changes for bokeh 0.12.9
+#         some changes for bokeh 0.12.9
 #
-# This script is prepared for a paper named as Interactive Seismic Visualization Using Bokeh submitted to SRL.
+# This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh submitted to SRL.
 #
 # Requirement:
 #       numpy 1.10.4

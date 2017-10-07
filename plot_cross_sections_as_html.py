@@ -2,13 +2,13 @@
 # 
 # by Chengping Chai, University of Tennessee, October 4, 2017
 # 
-# Version 1.1
+# Version 1.2
 #
 # Updates:
 #       V1.1, Chengping Chai, University of Tennessee, October 3, 2017
-#         minor changes for bokeh 0.12.9
+#         some changes for bokeh 0.12.9
 #
-# This script is prepared for a paper named as Interactive Seismic Visualization Using Bokeh submitted to SRL.
+# This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh submitted to SRL.
 #
 # Requirement:
 #       numpy 1.10.4
@@ -937,34 +937,7 @@ if __name__ == '__main__':
     style_parameter['colorbar_title'] = 'Shear Velocity (km/s)'
     style_parameter['colorbar_plot_height'] = 70
     #
-    style_parameter['profile_ndepth'] = 54
-    style_parameter['profile_default_index'] = 380
-    style_parameter['profile_plot_width'] = 500
-    style_parameter['profile_plot_height'] = 550
-    style_parameter['profile_plot_xmin'] = 0.
-    style_parameter['profile_plot_xmax'] = 6.
-    style_parameter['profile_plot_ymin'] = 0
-    style_parameter['profile_plot_ymax'] = 100
-    style_parameter['profile_tools'] = ['save','ywheel_zoom','xwheel_zoom','reset','crosshair','pan']
-    style_parameter['profile_title'] = '1D Shear Velocity Profile'
-    style_parameter['profile_xlabel'] = 'Shear Velocity (km/s)'
-    style_parameter['profile_ylabel'] = 'Depth (km)'
-    style_parameter['profile_lat_label_x'] = 0.2
-    style_parameter['profile_lat_label_y'] = 20
-    style_parameter['profile_lon_label_x'] = 0.2
-    style_parameter['profile_lon_label_y'] = 25
-    style_parameter['profile_label_box_x'] = 1
-    style_parameter['profile_label_box_y'] = 20
-    style_parameter['profile_label_box_width'] = 120
-    style_parameter['profile_label_box_height'] = 45
-    #
     style_parameter['depth_slider_title'] = 'Depth Index (drag to change depth)'
-    style_parameter['profile_slider_title'] = 'Profile Index (drag to change profile location)'
-    #
-    style_parameter['button_ndepth'] = 65
-    width=style_parameter['button_width'] = 250
-    style_parameter['simple_text_button_label'] = 'Download the profile as a simple text file'
-    style_parameter['model96_button_label'] = 'Download the profile as the model96 format'
     #
     style_parameter['annotation_plot_width'] = 550
     style_parameter['annotation_plot_height'] = 150
