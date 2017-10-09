@@ -1,4 +1,4 @@
-# Interactive Visualization Using HTML
+# Interactive Visualization of  Complex Seismic Data and Models Using Bokeh
 
 by Chengping Chai, Charles J. Ammon, Monica Meceria and Robert B. Herrmann
 
