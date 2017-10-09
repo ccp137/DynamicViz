@@ -61,7 +61,7 @@ python plot_waveforms_as_html.py
 
 ## Details on Velocity Model Viewer
 
-The Python script plot_3D_model_as_html.py can read in the 3D velocity model from a text file, plot the velocity model using the Bokeh package and save the model parameters as well as the visulization in a single HTML file. In the resulting HTML file, you will see a depth slice map and a profile plot side by side. The depth of the slice and the location of the profile plot can be changed with slider bars. The profile location also change with a click a grid point on the slice map. A screenshot of the HTML file is shown below.
+The Python script plot_3D_model_as_html.py can read in the 3D velocity model from a text file, plot the velocity model using the Bokeh package and save the model parameters as well as the visulization in a single HTML file. In the resulting HTML file, you will see a depth slice map and a profile plot side by side. The depth of the slice and the location of the profile plot can be changed with slider bars. The profile location also change with a click a grid point on the slice map. A screenshot of the HTML file is shown below. You can also view the interactive version at https://volweb.utk.edu/~cchai1/Viz/WUS_model_viewer.html.
 
 ![image](https://github.com/ccp137/DynamicViz/blob/master/Figures/Model_viewer.png)
 
@@ -167,7 +167,7 @@ In the Python script (plot_3D_model_as_html.py), we provide many customizable op
 
 ## Details on Cross-section Viewer
 
-The Python script plot_cross_sections_as_html.py can plot the 3D velocity model as depth slices and cross-sections side by side. The input file for this example is the same as the model viewer example. The output HTML allows user to slice the 3D model in three different directions. A screenshot of the HTML file is shown below.
+The Python script plot_cross_sections_as_html.py can plot the 3D velocity model as depth slices and cross-sections side by side. The input file for this example is the same as the model viewer example. The output HTML allows user to slice the 3D model in three different directions. A screenshot of the HTML file is shown below. An interactive version can be found at https://volweb.utk.edu/~cchai1/Viz/WUS_cross_section_viewer.html.
 
 ![image](https://github.com/ccp137/DynamicViz/blob/master/Figures/Cross_sections.png)
 
@@ -248,7 +248,7 @@ The Python script plot_cross_sections_as_html.py can plot the 3D velocity model 
 
 ## Details on Dispersion Viewer
 
-Another example can visualize dispersion models in map view and as dispersion curves on a same HTML page. A screenshot of the HTML file is shown below.
+Another example can visualize dispersion models in map view and as dispersion curves on a same HTML page. A screenshot of the HTML file is shown below. An interactive version can be found at https://volweb.utk.edu/~cchai1/Viz/WUS_dispersion_viewer.html.
 
 ![image](https://github.com/ccp137/DynamicViz/blob/master/Figures/Dispersion_viewer.png)
 
@@ -325,7 +325,7 @@ Another example can visualize dispersion models in map view and as dispersion cu
 
 ## Details on Waveform Viewer
 
-The Waveform Viewer plots three-component seismograms from multiple stations with a station map on the side. A screenshot of the HTML file is shown below.
+The Waveform Viewer plots three-component seismograms from multiple stations with a station map on the side. A screenshot of the HTML file is shown below. An interactive version can be found at https://volweb.utk.edu/~cchai1/Viz/Waveform_viewer.html.
 
 ![image](https://github.com/ccp137/DynamicViz/blob/master/Figures/Waveform_viewer.png)
 
