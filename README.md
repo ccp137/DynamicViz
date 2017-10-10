@@ -1,6 +1,6 @@
 # Interactive Visualization of  Complex Seismic Data and Models Using Bokeh
 
-by Chengping Chai, Charles J. Ammon, Monica Meceria and Robert B. Herrmann
+by Chengping Chai, Charles J. Ammon, Monica Meceira and Robert B. Herrmann
 
 This package contains source code and data for four examples of plotting 3D seismic models and data using HTML. We are using Python 2.7 for this package. In two examples, we use a dispersion model from Herrmann et al. (2013, http://www.eas.slu.edu/eqc/eqc_research/NATOMO/) and a 3D shear velocity model from Chai et al. ([GRL](http://onlinelibrary.wiley.com/doi/10.1002/2015GL063733/full), 2015, also at http://eqseis.geosc.psu.edu/~cchai/01research/01westernUS.html). Another example can plot cross-scetions and depth slices side by side. The dispersion data and velocity model are included in the folders RAYLU and WUS-CAMH-2015, respectively. The fourth example plots waveform using SAC files (data can be found in the folder WaveformData). Our plots also use political boundaries and coastlines data that are prepared with GMT (http://gmt.soest.hawaii.edu/). The boundary data for U.S. region are provided in the utility folder.
 
