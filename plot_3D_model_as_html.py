@@ -3,7 +3,7 @@
 #
 # by Chengping Chai, Penn State, 2016
 #
-# Version 1.2
+# Version 1.3
 #
 # Updates:
 #       V1.0, Chengping Chai, Penn State, 2016
@@ -11,6 +11,8 @@
 #         some changes for bokeh 0.12.9
 #       V1.2, Chengping Chai, University of Tennessee, October 6, 2017
 #         minor changes
+#       V1.3, Chengping Chai, University of Tennessee, December 1, 2017
+#         change the reference
 #
 # This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh
 # submitted to SRL.
@@ -18,7 +20,7 @@
 # Requirement:
 #       numpy 1.10.4
 #       scipy 0.17.0
-#       bokeh 0.12.9
+#       bokeh 0.12.13
 #
 import numpy as np
 from scipy import interpolate
@@ -181,7 +183,7 @@ def interpolate_map_data(map_data_one_slice, nlat=30, nlon=30, \
     map_vs = map_data_one_slice['vs']
     map_lat = map_data_one_slice['lat']
     map_lon = map_data_one_slice['lon']
-    z_list = np.zeros((nlon,nlat))
+    z_list = np.zeros((nlat,nlon))
     for ilat in range(nlat):
         for ilon in range(nlon):
             index = ilat * nlon + ilon
@@ -380,8 +382,8 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
     map_data_one_slice = map_data_all_slices[map_view_default_index]
 
     map_data_one_slice_bokeh = ColumnDataSource(data=dict(x=[style_parameter['map_view_image_lon_min']],\
-                   y=[style_parameter['map_view_image_lat_min']],dw=[style_parameter['nlon']],\
-                   dh=[style_parameter['nlat']],map_data_one_slice=[map_data_one_slice]))
+                   y=[style_parameter['map_view_image_lat_min']],dw=[style_parameter['nlon']*style_parameter['dlon']],\
+                   dh=[style_parameter['nlat']*style_parameter['dlat']],map_data_one_slice=[map_data_one_slice]))
     map_data_all_slices_bokeh = ColumnDataSource(data=dict(map_data_all_slices=map_data_all_slices,\
                                                            map_data_all_slices_depth=map_data_all_slices_depth))
     # ------------------------------
@@ -513,7 +515,7 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
                         boundary_data['state']['latitude'],color='black',\
                         level='underlay',nonselection_line_alpha=1.0,\
                         nonselection_line_color='black')
-     # ------------------------------
+    # ------------------------------
     # add depth label
     map_view.rect(style_parameter['map_view_depth_box_lon'], style_parameter['map_view_depth_box_lat'], \
                   width=style_parameter['map_view_depth_box_width'], height=style_parameter['map_view_depth_box_height'], \
@@ -732,8 +734,8 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
         link = document.createElement('a');
         link.setAttribute('href', encodedUri);
         link.setAttribute('download', 'vel_model96.txt');
-        link.click();                                  
-    """)                                       
+        link.click();
+    """)
     model96_button = Button(label=style_parameter['model96_button_label'], button_type='default', width=style_parameter['button_width'],\
                                 callback=model96_button_callback)
     # ==============================
@@ -760,6 +762,8 @@ if __name__ == '__main__':
     style_parameter['map_view_ndepth'] = 54
     style_parameter['nlat'] = 30
     style_parameter['nlon'] = 30
+    style_parameter['dlat'] = 1
+    style_parameter['dlon'] = 1
     style_parameter['map_view_figure_lat_min'] = 25
     style_parameter['map_view_figure_lat_max'] = 58.5
     style_parameter['map_view_figure_lon_min'] = -127
@@ -822,9 +826,10 @@ if __name__ == '__main__':
     style_parameter['annotation_plot_height'] = 150
     #
     style_parameter['annotating_html01'] = """<p style="font-size:16px">
-        <b> References:</b> <br>
-        Chai et al. (<a href="http://onlinelibrary.wiley.com/doi/10.1002/2015GL063733/full">GRL</a>, 2015, 
-        <a href="http://eqseis.geosc.psu.edu/~cchai/01research/01westernUS.html"> Website</a>)</p>"""
+        <b> Reference:</b> <br>
+        Chai, C., C. J. Ammon, M. Maceira, and R. B. Herrmann (2015), Inverting interpolated receiver functions \
+        with surface wave dispersion and gravity: Application to the western U.S. and adjacent Canada and Mexico, \
+        Geophysical Research Letters, 42(11), 4359–4366, doi:10.1002/2015GL063733.</p>"""
     #
     style_parameter['annotating_html02'] = """<p style="font-size:16px">
         <b> Tips:</b> <br>

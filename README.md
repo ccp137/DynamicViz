@@ -97,6 +97,8 @@ In the Python script (plot_3D_model_as_html.py), we provide many customizable op
 | map_view_ndepth | number of depth (horizontal layers) |
 | nlat | number of cells in latitude direction |
 | nlon | number of cells in longitude direction |
+| dlat | latitude interval |
+| dlon | longitude interval |
 | map_view_figure_lat_min | minimum latitude of the velocity map figure |
 | map_view_figure_lat_max | maximum latitude of the velocity map figure |
 | map_view_figure_lon_min | minimum longitude of the velocity map figure |
@@ -161,7 +163,7 @@ In the Python script (plot_3D_model_as_html.py), we provide many customizable op
 ### Known Limitations
 
 * Map projections are not supported
-* Slider value does not change with click
+* The slider value does not change with clicking
 
 -----
 
@@ -170,6 +172,8 @@ In the Python script (plot_3D_model_as_html.py), we provide many customizable op
 The Python script plot_cross_sections_as_html.py can plot the 3D velocity model as depth slices and cross-sections side by side. The input file for this example is the same as the model viewer example. The output HTML allows user to slice the 3D model in three different directions. A screenshot of the HTML file is shown below. An interactive version can be found at https://volweb.utk.edu/~cchai1/Viz/WUS_cross_section_viewer.html.
 
 ![image](https://github.com/ccp137/DynamicViz/blob/master/Figures/Cross_sections.png)
+
+The Python script plot_cross_sections_between_two_points_as_html.py can plot a cross-section between two points along a great arc. The two points are specified in the main function of the script. Other options are similar.
 
 ### Available Options
 
@@ -223,7 +227,10 @@ The Python script plot_cross_sections_as_html.py can plot the 3D velocity model 
 | cross_lat_view_lable_depth | position (depth value) of place the latitude label |
 | cross_view_vs_min | minimum of the color scale |
 | cross_view_vs_max | maximum of the color scale |
-| cross_lat_view_title | title of the cross-section plot along latitude |
+| cross_ddpeth | the step size of the cross-section along the depth direction |
+| cross_dlat | the step size of the cross-section along the latitude direction |
+| cross_dlon | the step size of the cross-section along the longitude direction |
+| cross_lat_view_title | title of the cross-section plot along the latitude direction |
 | cross_lat_view_tools | interactive tools to be used for the latitude cross-section |
 | cross_lon_plot_width | width of the cross-section along longitude in pixel |
 | cross_lon_plot_height | height of the cross-section along longitude in pixel |
@@ -242,7 +249,7 @@ The Python script plot_cross_sections_as_html.py can plot the 3D velocity model 
 ### Known Limitations
 
 * Map projections are not supported
-* Slider value does not change with click
+* The slider value does not change with clicking
 
 -----
 
@@ -319,7 +326,7 @@ Another example can visualize dispersion models in map view and as dispersion cu
 ### Known Limitations
 
 * Map projections are not supported
-* Slider value does not change with click
+* The slider value does not change with clicking
 
 ------
 
@@ -361,6 +368,9 @@ The Waveform Viewer plots three-component seismograms from multiple stations wit
 | curve_reftime_label_y | position (y) of the reference time label |
 | curve_channel_label_x | position (x) of the channel label |
 | curve_channel_label_y | position (y) of the channel label |
+| curve_filter_freqmin | minimum frequency of the bandpass filter |
+| curve_filter_freqmax | maximum frequency of the bandpass filter |
+| curve_taper_percentage | percentage of the taper |
 | annotation_plot_width | width of the annotating text at the bottom of the HTML page |
 | annotation_plot_height | height of the annotating text at the bottom of the HTML page |
 | annotating_html01 | content of the annotating text at the lower left corner |
@@ -374,4 +384,4 @@ The Waveform Viewer plots three-component seismograms from multiple stations wit
 ### Known Limitations
 
 * Map projections are not supported
-* Slider value does not change with click
+* The slider value does not change with clicking

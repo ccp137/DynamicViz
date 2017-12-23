@@ -3,7 +3,7 @@
 # 
 # by Chengping Chai, University of Tennessee, October 4, 2017
 # 
-# Version 1.2
+# Version 1.3
 #
 # Updates:
 #       V1.0, Chengping Chai, University of Tennessee, October 4, 2017
@@ -11,13 +11,15 @@
 #         some changes for bokeh 0.12.9
 #       V1.2, Chengping Chai, University of Tennessee, October 6, 2017
 #         minor changes
+#       V1.3, Chengping Chai, University of Tennessee, December 2, 2017
+#         change the reference, replace the interpolation function
 #
 # This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh submitted to SRL.
 #
 # Requirement:
 #       numpy 1.10.4
 #       scipy 0.17.0
-#       bokeh 0.12.9
+#       bokeh 0.12.13
 #
 import numpy as np
 from scipy import interpolate
@@ -187,7 +189,7 @@ def interpolate_map_data(map_data_one_slice, nlat=30, nlon=30, \
     map_vs = map_data_one_slice['vs']
     map_lat = map_data_one_slice['lat']
     map_lon = map_data_one_slice['lon']
-    z_list = np.zeros((nlon,nlat))
+    z_list = np.zeros((nlat,nlon))
     for ilat in range(nlat):
         for ilon in range(nlon):
             index = ilat * nlon + ilon
@@ -267,6 +269,120 @@ def compute_color_range(map_vs_one_slice, map_geo_one_slice, style_parameter):
     vs_max = vs_mean + vs_half_spread * style_parameter['spread_factor']
     return vs_min, vs_max
 # ========================================================
+def vel_at_depth(depth, tops, profile):
+    '''
+    version 1.0
+
+    interpolate perameters (vp, vs or rho) at a given depth for a 1D profile.
+    '''
+    import sys
+    if depth in tops:
+        depth_index = tops.index(depth)
+        data1 = profile[depth_index]
+    elif depth >= min(tops) and depth <= max(tops):
+        i = 0
+        depth0 = tops[i]
+        depth2 = tops[i+1]
+        while (depth0-depth)*(depth2-depth) > 0:
+            i = i + 1
+            depth0 = tops[i]
+            depth2 = tops[i+1]
+        #
+        idep0 = tops.index(depth0)
+        idep2 = tops.index(depth2)
+        #
+        data0 = profile[idep0]
+        data2 = profile[idep2]
+        data1 = (depth2 - depth)/(depth2-depth0)*data0 + \
+                (depth - depth0)/(depth2-depth0)*data2
+    else:
+        data1 = False
+        sys.exit('Depth input error!')
+    return data1
+#====================================================================
+def vel_at_latlon(point_lat,point_lon,prd_data):
+    '''
+    version 1.0
+
+    Compute parameters (vp, vs or rho) at a given point using bilinear 
+    interpolation for a 3D model.
+    '''
+    import sys
+    latmax = 54.5
+    lonmin = -126.5
+    nlat = 30
+    nlon = 30
+    dlat = 1.0
+    dlon = 1.0
+    latmin = latmax - (nlat - 1) * dlat
+    lonmax = lonmin + (nlon - 1) * dlon
+    flag = True
+    if point_lat > latmax or point_lat < latmax - nlat*dlat:
+        flag = False
+        sys.exit('Latitude out of range!')
+    if point_lon < lonmin or point_lon > lonmin + nlon*dlon:
+        flag = False
+        sys.exit('Longitude out of range!')
+    if flag:
+        ilat0 = int((latmax-point_lat)//dlat)
+        ilat2 = ilat0 + 1
+        lat0 = latmax - ilat0 * dlat
+        lat2 = latmax - ilat2 * dlat
+        ilon0 = int((point_lon-lonmin)//dlon)
+        ilon2 = ilon0 + 1
+        lon0 = lonmin + ilon0 * dlon
+        lon2 = lonmin + ilon2 * dlon
+        if lat0 == point_lat:
+            if abs(point_lat - latmin) < 0.01:
+                ilat0 = nlat - 1
+            if abs(point_lon - lonmax) < 0.01:
+                ilon0 = nlon - 1
+            if abs(point_lon - lonmax) < 0.01 or abs(point_lat - latmin) < 0.01:
+                data11 = prd_data[ilat0][ilon0]
+            if abs(point_lon - lonmax) > 0.01 and abs(point_lat - latmin) > 0.01:
+                data0 = prd_data[ilat0][ilon0]
+                if ilon2 > nlon or ilat0 > nlat:
+                    print point_lat, point_lon
+                data2 = prd_data[ilat0][ilon2]
+                data11 = [0 for i in range(len(data0))]
+                for i in range(len(data11)):
+                    data11[i] = (lon2-point_lon)/(lon2-lon0)*data0[i] + \
+                                (point_lon-lon0)/(lon2-lon0)*data2[i]
+        elif lon0 == point_lon:
+            if abs(point_lat - latmin) < 0.01:
+                ilat0 = nlat - 1
+            if abs(point_lon - lonmax) < 0.01:
+                ilon0 = nlon - 1
+            if abs(point_lon - lonmax) < 0.01 or abs(point_lat - latmin) < 0.01:
+                data11 = prd_data[ilat0][ilon0]
+            if abs(point_lat - latmin) > 0.01 and abs(point_lon - lonmax) > 0.01:
+                data0 = prd_data[ilat0][ilon0]
+                data2 = prd_data[ilat2][ilon0]
+                data11 = [0 for i in range(len(data0))]
+                for i in range(len(data11)):
+                    data11[i] = (point_lat-lat0)/(lat2-lat0)*data0[i] + \
+                                (lat2-point_lat)/(lat2-lat0)*data2[i]
+        else:
+            data00 = prd_data[ilat0][ilon0]
+            data02 = prd_data[ilat0][ilon2]
+            data20 = prd_data[ilat2][ilon0]
+            data22 = prd_data[ilat2][ilon2]
+            data01 = [0 for i in range(len(data00))]
+            data21 = [0 for i in range(len(data00))]
+            data11 = [0 for i in range(len(data00))]
+            for i in range(len(data01)):
+                data01[i] = (lon2-point_lon)/(lon2-lon0)*data00[i] + \
+                            (point_lon-lon0)/(lon2-lon0)*data02[i]
+            for i in range(len(data21)):
+                data21[i] = (lon2-point_lon)/(lon2-lon0)*data20[i] + \
+                            (point_lon-lon0)/(lon2-lon0)*data22[i]
+            for i in range(len(data11)):
+                data11[i] = (point_lat-lat0)/(lat2-lat0)*data01[i] + \
+                            (lat2-point_lat)/(lat2-lat0)*data21[i]
+    else:
+        data11 = flag
+    return data11
+# ========================================================
 def prepare_map_data(profile_data_all, ndepth=54):
     '''
     Prepare data for map view plots
@@ -324,207 +440,105 @@ def prepare_map_data(profile_data_all, ndepth=54):
         map_data_all.append(map_data_one_slice_clipped['vs'])
     return map_data_all, map_depth_all, color_range_all_slices
 # ========================================================
-def prepare_lat_cross_data(profile_data_all, style_parameter):
-    '''
-    Prepare data for cross-sections along latitude direction
-
-    Input:
-        profile_data_all is a list of dictionaries that contain Vp, Vs, 
-            rho, lat, lon, geological label, and layer top values
-
-        style_parameter contains parameters to customize the plots
-
-    Output:
-        cross_lat_data_all is a list of lists that store the Vs values on every cross-sections along latitude
-        cross_lat_all is a list of latitudes corresponding to the cross-sections
-    '''
+def prepare_lat_cross_data(model_3D, style_parameter):
     ndepth = style_parameter['map_view_ndepth']
+    vs_min = style_parameter['cross_view_vs_min']
+    vs_max = style_parameter['cross_view_vs_max']
+    dlon_interp = style_parameter['cross_dlon']
+    ddepth_interp = style_parameter['cross_ddepth']
     cross_lat_data_all = []
-    nprofile = len(profile_data_all)
-    temp_lat_list = []
-    for iprofile in range(nprofile):
-        temp_lat_list.append(profile_data_all[iprofile]['lat'])
-    cross_lat_all = sorted(list(set(temp_lat_list)))
+    cross_lat_all = sorted(list(set(np.array(model_3D['lat']).flatten())))
     data_lon_all = []
     data_depth_all = []
+    depth = np.arange(200) * ddepth_interp
     for ilat in range(len(cross_lat_all)):
         cross_data_one_slice = {}
         cross_vs_one_slice = []
         cross_lon_one_slice = []
         cross_depth_one_slice = []
-        for iprofile in range(nprofile):
-            profile = profile_data_all[iprofile]
-            lat = profile['lat']
-            if lat == cross_lat_all[ilat]:
-                vs = profile['vs']
-                top = profile['top']
-                lon = profile['lon']
-                for idepth in range(ndepth-1, -1, -1):
-                    depth = top[idepth] + (top[idepth+1] - top[idepth])/2.
-                    cross_vs_one_slice.append(vs[idepth])
-                    cross_lon_one_slice.append(lon)
-                    cross_depth_one_slice.append(depth)
+        lat = cross_lat_all[ilat]
+        lon_min = np.min(model_3D['lon'])
+        lon_max = np.max(model_3D['lon'])
+        nlon = int(abs(lon_max - lon_min) / dlon_interp)
+        lon_list = lon_max - np.arange(nlon) * dlon_interp
+        lat_list = np.array([lat]*nlon)
+        for i in range(len(lon_list)):
+            lat = lat_list[i]
+            lon = lon_list[i]
+            val = vel_at_latlon(lat, lon, model_3D['vs'])
+            temp_list = []
+            for ik in range(len(depth)-1, -1, -1):
+                temp = vel_at_depth(depth[ik], model_3D['top'][0][0], val)
+                temp_list.append(temp)
+            cross_vs_one_slice.append(temp_list)
         #
-        cross_data_one_slice['vs'] = cross_vs_one_slice
-        cross_data_one_slice['lon'] = cross_lon_one_slice
-        cross_data_one_slice['depth'] = cross_depth_one_slice
-        # interpolated a cross-section
-        cross_data_one_slice_interpolated = interpolate_cross_lat_data(cross_data_one_slice, \
-                                                             nlon=style_parameter['nlon'],\
-                                                             ndepth=ndepth)
-
-        cross_data_one_slice_clipped = clip_map_data(cross_data_one_slice_interpolated, \
-                                                     style_parameter['cross_view_vs_min'],\
-                                                     style_parameter['cross_view_vs_max'])
-        cross_lat_data_all.append(cross_data_one_slice_clipped['vs'])
-    #
-    
+        for i in range(len(cross_vs_one_slice)):
+            temp = cross_vs_one_slice[i]
+            for j in range(len(temp)):
+                vs = temp[j]
+                if vs > vs_max:
+                    cross_vs_one_slice[i][j] = vs_max
+                if vs < vs_min:
+                    cross_vs_one_slice[i][j] = vs_min
+        #
+        transposed = []
+        for i in range(np.shape(cross_vs_one_slice)[1]):
+            temp_list = []
+            for j in range(np.shape(cross_vs_one_slice)[0]):
+                temp_list.append(cross_vs_one_slice[-j][i])
+            transposed.append(temp_list)
+        cross_lat_data_all.append(transposed)
     return cross_lat_data_all, cross_lat_all
 # ========================================================
-def interpolate_cross_lat_data(cross_data_one_slice, nlon=30, ndepth=54,\
-                         dlon_interp=0.2, ddepth_interp=1, lon_order='descend',\
-                         depth_order='descend'):
-    '''
-    Interpolate shear velocity values on a cross-section
-
-    Input:
-        cross_data_one_slice is a dictionary that constains Vs, lat, and lon of a cross-section
-        nlon is the total number of grid points along longitude
-        dlon_interp is the interpolation spacing along longitude
-        ddepth_interp is the interpolation spacing along vertical direction
-        lon_order is the ordering of grid points in the longitude direction
-        depth_order is the ordering of gird points in the vertical direction
-
-    Output:
-        cross_data_one_slice_interpolated is a dictionary that constains interpolated Vs, depth, 
-            and lon of the depth slice
-    '''
-    cross_vs = cross_data_one_slice['vs']
-    cross_depth = cross_data_one_slice['depth']
-    cross_lon = cross_data_one_slice['lon']
-    z_list = np.zeros((ndepth, nlon))
-    for idepth in range(ndepth):
-        for ilon in range(nlon):
-            index = ilon * ndepth + idepth
-            z_list[ndepth-idepth-1][ilon] = cross_vs[index]
-    #
-    y_temp = cross_depth[0:ndepth]
-    x_temp = [cross_lon[i*ndepth] for i in range(nlon)]
-    f = interpolate.interp2d(x_temp,y_temp,z_list,kind='cubic')
-    if lon_order == 'ascend':
-        lon_new = np.arange(min(x_temp),max(x_temp)+dlon_interp, dlon_interp)
-    elif lon_order == 'descend':
-        lon_new = np.arange(max(x_temp),min(x_temp)-dlon_interp, -dlon_interp)
-    if depth_order == 'ascend':
-        depth_new = np.arange(min(y_temp),max(y_temp)+ddepth_interp, ddepth_interp)
-    elif depth_order == 'descend':
-        depth_new = np.arange(max(y_temp),min(y_temp)-ddepth_interp, -ddepth_interp)
-    z_new = f(lon_new,depth_new)
-    cross_data_one_slice_interpolated = {}
-    cross_data_one_slice_interpolated['vs'] = z_new
-    cross_data_one_slice_interpolated['depth'] = depth_new
-    cross_data_one_slice_interpolated['lon'] = lon_new
-    return cross_data_one_slice_interpolated
-# ========================================================
-def prepare_lon_cross_data(profile_data_all, style_parameter):
-    '''
-    Prepare data for cross-sections along longitude direction
-
-    Input:
-        profile_data_all is a list of dictionaries that contain Vp, Vs, 
-            rho, lat, lon, geological label, and layer top values
-
-        style_parameter contains parameters to customize the plots
-
-    Output:
-        cross_lon_data_all is a list of lists that store the Vs values on every cross-sections along longitude
-        cross_lon_all is a list of longitude corresponding to the cross-sections
-    '''
+def prepare_lon_cross_data(model_3D, style_parameter):
     ndepth = style_parameter['map_view_ndepth']
+    vs_min = style_parameter['cross_view_vs_min']
+    vs_max = style_parameter['cross_view_vs_max']
+    dlat_interp = style_parameter['cross_dlat']
+    ddepth_interp = style_parameter['cross_ddepth']
     cross_lon_data_all = []
-    nprofile = len(profile_data_all)
-    temp_lon_list = []
-    for iprofile in range(nprofile):
-        temp_lon_list.append(profile_data_all[iprofile]['lon'])
-    cross_lon_all = sorted(list(set(temp_lon_list)))
+    cross_lon_all = sorted(list(set(np.array(model_3D['lon']).flatten())))
     data_lat_all = []
     data_depth_all = []
+    depth = np.arange(200) * ddepth_interp
     for ilon in range(len(cross_lon_all)):
         cross_data_one_slice = {}
         cross_vs_one_slice = []
         cross_lat_one_slice = []
         cross_depth_one_slice = []
-        for iprofile in range(nprofile):
-            profile = profile_data_all[iprofile]
-            lon = profile['lon']
-            if lon == cross_lon_all[ilon]:
-                vs = profile['vs']
-                top = profile['top']
-                lat = profile['lat']
-                for idepth in range(ndepth-1, -1, -1):
-                    depth = top[idepth] + (top[idepth+1] - top[idepth])/2.
-                    cross_vs_one_slice.append(vs[idepth])
-                    cross_lat_one_slice.append(lat)
-                    cross_depth_one_slice.append(depth)
+        lon = cross_lon_all[ilon]
+        lat_min = np.min(model_3D['lat'])
+        lat_max = np.max(model_3D['lat'])
+        nlat = int(abs(lat_max - lat_min) / dlat_interp)
+        lat_list = lat_max - np.arange(nlat) * dlat_interp
+        lon_list = np.array([lon]*nlat)
+        for i in range(len(lat_list)):
+            lat = lat_list[i]
+            lon = lon_list[i]
+            val = vel_at_latlon(lat, lon, model_3D['vs'])
+            temp_list = []
+            for ik in range(len(depth)-1, -1, -1):
+                temp = vel_at_depth(depth[ik], model_3D['top'][0][0], val)
+                temp_list.append(temp)
+            cross_vs_one_slice.append(temp_list)
         #
-        cross_data_one_slice['vs'] = cross_vs_one_slice
-        cross_data_one_slice['lat'] = cross_lat_one_slice
-        cross_data_one_slice['depth'] = cross_depth_one_slice
-        # interpolated a cross-section
-        cross_data_one_slice_interpolated = interpolate_cross_lon_data(cross_data_one_slice, \
-                                                             nlat=style_parameter['nlat'],\
-                                                             ndepth=ndepth)
-        cross_data_one_slice_clipped = clip_map_data(cross_data_one_slice_interpolated, \
-                                                     style_parameter['cross_view_vs_min'],\
-                                                     style_parameter['cross_view_vs_max'])
-        cross_lon_data_all.append(cross_data_one_slice_clipped['vs'])
-    #
+        for i in range(len(cross_vs_one_slice)):
+            temp = cross_vs_one_slice[i]
+            for j in range(len(temp)):
+                vs = temp[j]
+                if vs > vs_max:
+                    cross_vs_one_slice[i][j] = vs_max
+                if vs < vs_min:
+                    cross_vs_one_slice[i][j] = vs_min
+        #
+        transposed = []
+        for i in range(np.shape(cross_vs_one_slice)[1]):
+            temp_list = []
+            for j in range(np.shape(cross_vs_one_slice)[0]):
+                temp_list.append(cross_vs_one_slice[-j][i])
+            transposed.append(temp_list)
+        cross_lon_data_all.append(transposed)
     return cross_lon_data_all, cross_lon_all
-# ========================================================
-def interpolate_cross_lon_data(cross_data_one_slice, nlat=30, ndepth=54,\
-                         dlat_interp=0.2, ddepth_interp=1, lat_order='descend',\
-                         depth_order='descend'):
-    '''
-    Interpolate shear velocity values on a cross-section
-
-    Input:
-        cross_data_one_slice is a dictionary that constains Vs, lat, and lon of a cross-section
-        nlat is the total number of grid points along latitude
-        dlat_interp is the interpolation spacing along latitude
-        ddepth_interp is the interpolation spacing along vertical direction
-        lat_order is the ordering of grid points in the latitude direction
-        depth_order is the ordering of gird points in the vertical direction
-
-    Output:
-        cross_data_one_slice_interpolated is a dictionary that constains interpolated Vs, depth, 
-            and lat of the depth slice
-    '''
-    cross_vs = cross_data_one_slice['vs']
-    cross_depth = cross_data_one_slice['depth']
-    cross_lat = cross_data_one_slice['lat']
-    z_list = np.zeros((ndepth, nlat))
-    for idepth in range(ndepth):
-        for ilat in range(nlat):
-            index = ilat * ndepth + idepth
-            z_list[ndepth-idepth-1][ilat] = cross_vs[index]
-    #
-    y_temp = cross_depth[0:ndepth]
-    x_temp = [cross_lat[i*ndepth] for i in range(nlat)]
-    f = interpolate.interp2d(x_temp,y_temp,z_list,kind='cubic')
-    if lat_order == 'ascend':
-        lat_new = np.arange(min(x_temp),max(x_temp)+dlat_interp, dlat_interp)
-    elif lat_order == 'descend':
-        lat_new = np.arange(max(x_temp),min(x_temp)-dlat_interp, -dlat_interp)
-    if depth_order == 'ascend':
-        depth_new = np.arange(min(y_temp),max(y_temp)+ddepth_interp, ddepth_interp)
-    elif depth_order == 'descend':
-        depth_new = np.arange(max(y_temp),min(y_temp)-ddepth_interp, -ddepth_interp)
-    z_new = f(lat_new,depth_new)
-    cross_data_one_slice_interpolated = {}
-    cross_data_one_slice_interpolated['vs'] = z_new
-    cross_data_one_slice_interpolated['depth'] = depth_new
-    cross_data_one_slice_interpolated['lat'] = lat_new
-    return cross_data_one_slice_interpolated
 # ========================================================
 def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
                              color_range_all_slices, profile_data_all, cross_lat_data_all, \
@@ -601,9 +615,10 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
     for a in lat_value_all:
         cross_lat_label_all.append('Lat: '+str(a))
     cross_lat_data_one_slice = cross_lat_data_all[style_parameter['cross_lat_default_index']]
+    plot_depth = np.shape(cross_lat_data_one_slice)[0] * style_parameter['cross_ddepth']
     cross_lat_data_one_slice_bokeh = ColumnDataSource(data=dict(x=[style_parameter['map_view_image_lon_min']],\
-                   y=[204],dw=[style_parameter['nlon']],\
-                   dh=[204],cross_lat_data_one_slice=[cross_lat_data_one_slice]))
+                   y=[plot_depth],dw=[style_parameter['nlon']],\
+                   dh=[plot_depth],cross_lat_data_one_slice=[cross_lat_data_one_slice]))
     cross_lat_data_all_slices_bokeh = ColumnDataSource(data=dict(cross_lat_data_all=cross_lat_data_all))
     cross_lat_view_label_lon = style_parameter['cross_lat_view_label_lon']
     cross_lat_view_label_depth = style_parameter['cross_lat_view_label_depth']
@@ -620,9 +635,10 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
     for a in lon_value_all:
         cross_lon_label_all.append('Lon: '+str(a))
     cross_lon_data_one_slice = cross_lon_data_all[style_parameter['cross_lon_default_index']]
+    plot_depth = np.shape(cross_lon_data_one_slice)[0] * style_parameter['cross_ddepth']
     cross_lon_data_one_slice_bokeh = ColumnDataSource(data=dict(x=[style_parameter['map_view_image_lat_min']],\
-                   y=[204],dw=[style_parameter['nlat']],\
-                   dh=[204],cross_lon_data_one_slice=[cross_lon_data_one_slice]))
+                   y=[plot_depth],dw=[style_parameter['nlat']],\
+                   dh=[plot_depth],cross_lon_data_one_slice=[cross_lon_data_one_slice]))
     cross_lon_data_all_slices_bokeh = ColumnDataSource(data=dict(cross_lon_data_all=cross_lon_data_all))
     cross_lon_view_label_lat = style_parameter['cross_lon_view_label_lat']
     cross_lon_view_label_depth = style_parameter['cross_lon_view_label_depth']
@@ -759,7 +775,7 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
     # plot cross-section along latitude
     cross_lat_view = Figure(plot_width= style_parameter['cross_lat_plot_width'], plot_height=style_parameter['cross_lat_plot_height'], \
                       tools=style_parameter['cross_lat_view_tools'], title=style_parameter['cross_lat_view_title'], \
-                      y_range=[204, -30],\
+                      y_range=[plot_depth, -30],\
                       x_range=[style_parameter['map_view_image_lon_min'], style_parameter['map_view_image_lon_max']])
     cross_lat_view.image('cross_lat_data_one_slice',x='x',\
                    y='y',dw='dw',\
@@ -793,7 +809,7 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
     # plot cross-section along latitude
     cross_lon_view = Figure(plot_width= style_parameter['cross_lon_plot_width'], plot_height=style_parameter['cross_lon_plot_height'], \
                       tools=style_parameter['cross_lon_view_tools'], title=style_parameter['cross_lon_view_title'], \
-                      y_range=[204, -30],\
+                      y_range=[plot_depth, -30],\
                       x_range=[style_parameter['map_view_image_lat_min'], style_parameter['map_view_image_lat_max']])
     cross_lon_view.image('cross_lon_data_one_slice',x='x',\
                    y='y',dw='dw',\
@@ -952,8 +968,11 @@ if __name__ == '__main__':
     style_parameter['lat_slider_title'] = 'Latitude Index (drag to change latitude)'
     style_parameter['cross_lat_view_label_lon'] = -114
     style_parameter['cross_lat_view_label_depth'] = -5
-    style_parameter['cross_view_vs_min'] = 2.5
-    style_parameter['cross_view_vs_max'] = 4.3
+    style_parameter['cross_view_vs_min'] = 2.8
+    style_parameter['cross_view_vs_max'] = 4.6
+    style_parameter['cross_ddepth'] = 1.0
+    style_parameter['cross_dlat'] = 0.5
+    style_parameter['cross_dlon'] = 0.5
     style_parameter['cross_lat_view_title'] = 'Cross-sections Along Latitude'
     style_parameter['cross_lat_view_tools'] = ['save', 'crosshair']
     #
@@ -973,9 +992,10 @@ if __name__ == '__main__':
     style_parameter['cross_lon_view_ylabel'] = 'Depth (km)'
     #
     style_parameter['annotating_html01'] = """<p style="font-size:16px">
-        <b> References:</b> <br>
-        Chai et al. (<a href="http://onlinelibrary.wiley.com/doi/10.1002/2015GL063733/full">GRL</a>, 2015, 
-        <a href="http://eqseis.geosc.psu.edu/~cchai/01research/01westernUS.html"> Website</a>)</p>
+        <b> Reference:</b> <br>
+        Chai, C., C. J. Ammon, M. Maceira, and R. B. Herrmann (2015), Inverting interpolated receiver functions \
+        with surface wave dispersion and gravity: Application to the western U.S. and adjacent Canada and Mexico, \
+        Geophysical Research Letters, 42(11), 4359–4366, doi:10.1002/2015GL063733.</p>
         <b> Tips:</b> <br>
         Drag a slider to change the depth or the cross-section location. <br>
         The dashed lines show cross-section locations on the Shear Velocity Map. <br>
@@ -998,9 +1018,9 @@ if __name__ == '__main__':
     map_data_all_slices, map_depth_all_slices, color_range_all_slices = \
             prepare_map_data(profile_data_all, ndepth=style_parameter['map_view_ndepth'])
     # convert profile data into cross-section along latitude
-    cross_lat_data_all, lat_label_all = prepare_lat_cross_data(profile_data_all, style_parameter)
+    cross_lat_data_all, lat_label_all = prepare_lat_cross_data(model_3D, style_parameter)
      # convert profile data into cross-section along longitude
-    cross_lon_data_all, lon_label_all = prepare_lon_cross_data(profile_data_all, style_parameter)
+    cross_lon_data_all, lon_label_all = prepare_lon_cross_data(model_3D, style_parameter)
     #
     plot_cross_section_bokeh(style_parameter['html_filename'], map_data_all_slices, map_depth_all_slices, \
                        color_range_all_slices, profile_data_all, cross_lat_data_all, lat_label_all, \

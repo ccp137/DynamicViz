@@ -3,7 +3,7 @@
 # 
 # by Chengping Chai, Penn State, 2016
 # 
-# Version 1.2
+# Version 1.3
 #
 # Updates:
 #       V1.0  Chengping Chai, Penn State, 2016
@@ -11,12 +11,14 @@
 #         some changes for bokeh 0.12.9
 #       V1.2, Chengping Chai, University of Tennessee, October 6, 2017
 #         minor changes
+#       V1.3, Chengping Chai, University of Tennessee, December 1, 2017
+#         change the reference
 #
 # This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh submitted to SRL.
 #
 # Requirement:
 #       numpy 1.10.4
-#       bokeh 0.12.9
+#       bokeh 0.12.13
 #
 import numpy as np
 from bokeh.plotting import Figure, output_file, save
@@ -608,8 +610,9 @@ if __name__ == '__main__':
     style_parameter['annotation_tools'] = []
     #
     style_parameter['annotating_html01'] = """<p style="font-size:16px">
-        <b> References:</b> <br>
-        Herrmann et al. (2013, <a href="http://www.eas.slu.edu/eqc/eqc_research/NATOMO/">Online</a>)</p>"""
+        <b> Reference:</b> <br>
+        Herrmann, R. B., H. Benz, and C. J. Ammon (2016). Mapping Love/Rayleigh Phase/Group Velocity Dispersion Between 2–100 Seconds \
+        in North America using Ambient Noise Cross-correlations and Earthquake Observations (abs), Seism. Res. Letters 87 p546</p>"""
     #
     style_parameter['annotating_html02'] = """<p style="font-size:16px">
         <b> Tips:</b> <br>

@@ -3,7 +3,7 @@
 # 
 # by Chengping Chai, University of Tennessee, October 4, 2017
 # 
-# Version 1.2
+# Version 1.3
 #
 # Updates:
 #       V1.0, Chengping Chai, University of Tennessee, October 4, 2017
@@ -11,12 +11,14 @@
 #         some changes for bokeh 0.12.9
 #       V1.2, Chengping Chai, University of Tennessee, October 6, 2017
 #         minor changes
+#       V1.3, Chengping Chai, University of Tennessee, December 2, 2017
+#         added taper and filter
 #
 # This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh submitted to SRL.
 #
 # Requirement:
 #       numpy 1.10.4
-#       bokeh 0.12.9
+#       bokeh 0.12.13
 #       obspy 1.0.3
 #
 import numpy as np
@@ -32,7 +34,7 @@ from obspy import read
 import glob
 from utility import *
 # ========================================================
-def read_waveform_from_sac(folder,lat_min=-90,lat_max=90,\
+def read_waveform_from_sac(folder, style_parameter, lat_min=-90,lat_max=90,\
                           lon_min=-180,lon_max=180):
     '''
     Read waveform data for one event from SAC files in a folder.
@@ -56,8 +58,13 @@ def read_waveform_from_sac(folder,lat_min=-90,lat_max=90,\
     station_id_list = []
     data_list = []
     info_list = []
+    freqmin = style_parameter['curve_filter_freqmin']
+    freqmax = style_parameter['curve_filter_freqmax']
+    taper_percentage = style_parameter['curve_taper_percentage']
     for a_file in file_list:
         tr = read(a_file)[0]
+        tr.taper(taper_percentage, type='hann')
+        tr.filter('bandpass', freqmin=freqmin, freqmax=freqmax)
         sta_lat = tr.stats.sac['stla']
         sta_lon = tr.stats.sac['stlo']
         sta_code = tr.stats.station
@@ -486,9 +493,12 @@ if __name__ == '__main__':
     style_parameter['curve_default_index'] = 0
     style_parameter['curve_slider_title'] = 'Station Index (drag to change the location)'
     style_parameter['curve_reftime_label_x'] = 50
-    style_parameter['curve_reftime_label_y'] = -0.001
+    style_parameter['curve_reftime_label_y'] = 0.0004
     style_parameter['curve_channel_label_x'] = 500
-    style_parameter['curve_channel_label_y'] = 0.0005
+    style_parameter['curve_channel_label_y'] = 0.00005
+    style_parameter['curve_filter_freqmin'] = 0.0125
+    style_parameter['curve_filter_freqmax'] = 0.1
+    style_parameter['curve_taper_percentage'] = 0.05 
 
     style_parameter['annotation_plot_width'] = 750
     style_parameter['annotation_plot_height'] = 150
@@ -509,7 +519,8 @@ if __name__ == '__main__':
     boundary_data = read_boundary_data()
     #
     station_lat_list, station_lon_list, event_lat, event_lon, \
-    waveform_list, metadata_list = read_waveform_from_sac(style_parameter['waveform_folder']+'/*.sac')
+    waveform_list, metadata_list = read_waveform_from_sac(style_parameter['waveform_folder']+'/*.sac', \
+        style_parameter)
     #
     plot_waveform_bokeh(style_parameter['html_filename'],waveform_list,metadata_list,station_lat_list,\
         station_lon_list, event_lat, event_lon, boundary_data, style_parameter)
