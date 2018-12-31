@@ -3,7 +3,7 @@
 # 
 # by Chengping Chai, University of Tennessee, October 4, 2017
 # 
-# Version 1.3
+# Version 1.4
 #
 # Updates:
 #       V1.0, Chengping Chai, University of Tennessee, October 4, 2017
@@ -13,13 +13,15 @@
 #         minor changes
 #       V1.3, Chengping Chai, University of Tennessee, December 2, 2017
 #         added taper and filter
+#       V1.4, Chengping Chai, Oak Ridge National Laboratory, December 31, 2018
+#         minor changes to work with latest libraries.
 #
 # This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh submitted to SRL.
 #
 # Requirement:
-#       numpy 1.10.4
-#       bokeh 0.12.13
-#       obspy 1.0.3
+#       numpy 1.15.3
+#       bokeh 1.0.2
+#       obspy 1.1.3
 #
 import numpy as np
 from bokeh.plotting import Figure, output_file, save
@@ -93,7 +95,7 @@ def read_waveform_from_sac(folder, style_parameter, lat_min=-90,lat_max=90,\
     #
     unique_event_id_list = list(set(event_id_list))
     if len(unique_event_id_list) > 1:
-        print 'More than one event is found in the folder, plotting the event with most data.'
+        print('More than one event is found in the folder, plotting the event with most data.')
     else:
         event_id = unique_event_id_list[0]
     #
@@ -341,7 +343,7 @@ def plot_waveform_bokeh(filename,waveform_list,metadata_list,station_lat_list,\
     curve_fig03.toolbar_location = 'above'
     curve_fig03.toolbar_sticky = False
     # --------------------------------------------------------
-    map_station_location_bokeh.callback = CustomJS(args=dict(selected_dot_on_map_bokeh=selected_dot_on_map_bokeh,\
+    map_station_location_js = CustomJS(args=dict(selected_dot_on_map_bokeh=selected_dot_on_map_bokeh,\
                                                             map_station_location_bokeh=map_station_location_bokeh,\
                                                             selected_curve_data_bokeh01=selected_curve_data_bokeh01,\
                                                             selected_curve_data_bokeh02=selected_curve_data_bokeh02,\
@@ -353,7 +355,7 @@ def plot_waveform_bokeh(filename,waveform_list,metadata_list,station_lat_list,\
                                                             all_reftime_label_bokeh=all_reftime_label_bokeh,\
                                                             all_channel_label_bokeh=all_channel_label_bokeh,\
                                                             all_curve_data_bokeh=all_curve_data_bokeh), code="""
-    var inds = Math.round(cb_obj.selected['1d'].indices)
+    var inds = cb_obj.indices
     
     selected_dot_on_map_bokeh.data['index'] = [inds]
     var new_loc = map_station_location_bokeh.data
@@ -394,6 +396,9 @@ def plot_waveform_bokeh(filename,waveform_list,metadata_list,station_lat_list,\
     
     selected_channel_label_bokeh03.change.emit()
     """)
+    #
+    map_station_location_bokeh.selected.js_on_change('indices', map_station_location_js)
+    #
     curve_slider_callback = CustomJS(args=dict(selected_dot_on_map_bokeh=selected_dot_on_map_bokeh,\
                                                 map_station_location_bokeh=map_station_location_bokeh,\
                                                 selected_curve_data_bokeh01=selected_curve_data_bokeh01,\
@@ -503,6 +508,9 @@ if __name__ == '__main__':
     style_parameter['annotation_plot_width'] = 750
     style_parameter['annotation_plot_height'] = 150
     style_parameter['annotating_html01'] = """<p style="font-size:16px">
+        <b> Reference:</b> <br>
+        Chai, C., Ammon, C.J., Maceira, M., Herrmann, R.B., 2018. Interactive Visualization of Complex Seismic Data \
+        and Models Using Bokeh. Seismol. Res. Lett. 89, 668–676. https://doi.org/10.1785/0220170132. <br>
         <b> Tips:</b> <br>
         Drag the slider to choose a station (triangle). <br>
         Click a triangle on the map to show waveforms at the location.

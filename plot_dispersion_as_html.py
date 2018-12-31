@@ -3,7 +3,7 @@
 # 
 # by Chengping Chai, Penn State, 2016
 # 
-# Version 1.3
+# Version 1.4
 #
 # Updates:
 #       V1.0  Chengping Chai, Penn State, 2016
@@ -13,12 +13,14 @@
 #         minor changes
 #       V1.3, Chengping Chai, University of Tennessee, December 1, 2017
 #         change the reference
+#       V1.4, Chengping Chai, Oak Ridge National Laboratory, December 31, 2018
+#         minor changes to work with latest libraries.
 #
 # This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh submitted to SRL.
 #
 # Requirement:
-#       numpy 1.10.4
-#       bokeh 0.12.13
+#       numpy 1.15.3
+#       bokeh 1.0.2
 #
 import numpy as np
 from bokeh.plotting import Figure, output_file, save
@@ -425,7 +427,7 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
     curve_fig.toolbar_location = 'above'
     curve_fig.toolbar_sticky = False
     # ==============================
-    map_data_one_slice_bokeh.callback = CustomJS(args=dict(selected_dot_on_map_bokeh=selected_dot_on_map_bokeh,\
+    map_data_one_slice_js = CustomJS(args=dict(selected_dot_on_map_bokeh=selected_dot_on_map_bokeh,\
                                                           map_data_one_slice_bokeh=map_data_one_slice_bokeh,\
                                                           selected_curve_data_bokeh=selected_curve_data_bokeh,\
                                                           curve_data_all_bokeh=curve_data_all_bokeh,\
@@ -434,7 +436,7 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
                                                           all_curve_lat_label_bokeh=all_curve_lat_label_bokeh,\
                                                           all_curve_lon_label_bokeh=all_curve_lon_label_bokeh), code="""
     
-    var inds = Math.round(cb_obj.selected['1d'].indices)
+    var inds = cb_obj.indices
     
     selected_dot_on_map_bokeh.data['index'] = [inds]
     
@@ -460,6 +462,7 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
     selected_curve_lat_label_bokeh.change.emit()
     selected_curve_lon_label_bokeh.change.emit()
     """)
+    map_data_one_slice_bokeh.selected.js_on_change('indices', map_data_one_slice_js)
     # ==============================
     period_slider_callback = CustomJS(args=dict(map_data_all_slices_bokeh=map_data_all_slices_bokeh,\
                                   map_data_one_slice_bokeh=map_data_one_slice_bokeh,\
@@ -611,8 +614,10 @@ if __name__ == '__main__':
     #
     style_parameter['annotating_html01'] = """<p style="font-size:16px">
         <b> Reference:</b> <br>
-        Herrmann, R. B., H. Benz, and C. J. Ammon (2016). Mapping Love/Rayleigh Phase/Group Velocity Dispersion Between 2–100 Seconds \
-        in North America using Ambient Noise Cross-correlations and Earthquake Observations (abs), Seism. Res. Letters 87 p546</p>"""
+        Herrmann, R.B., Benz, H. and Ammon C.J., 2016. Mapping Love/Rayleigh Phase/Group Velocity Dispersion Between 2–100 Seconds \
+        in North America using Ambient Noise Cross-correlations and Earthquake Observations (abs), Seism. Res. Letters 87 p546.</br>
+        Chai, C., Ammon, C.J., Maceira, M., Herrmann, R.B., 2018. Interactive Visualization of Complex Seismic Data \
+        and Models Using Bokeh. Seismol. Res. Lett. 89, 668–676. https://doi.org/10.1785/0220170132. </p>"""
     #
     style_parameter['annotating_html02'] = """<p style="font-size:16px">
         <b> Tips:</b> <br>

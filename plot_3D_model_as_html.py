@@ -3,7 +3,7 @@
 #
 # by Chengping Chai, Penn State, 2016
 #
-# Version 1.3
+# Version 1.4
 #
 # Updates:
 #       V1.0, Chengping Chai, Penn State, 2016
@@ -13,14 +13,16 @@
 #         minor changes
 #       V1.3, Chengping Chai, University of Tennessee, December 1, 2017
 #         change the reference
+#		V1.4, Chengping Chai, Oak Ridge National Laboratory, December 31, 2018
+#		  update color scaling, minor changes to work with latest libraries.
 #
 # This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh
 # submitted to SRL.
 #
 # Requirement:
-#       numpy 1.10.4
-#       scipy 0.17.0
-#       bokeh 0.12.13
+#       numpy 1.15.3
+#       scipy 1.1.0
+#       bokeh 1.0.2
 #
 import numpy as np
 from scipy import interpolate
@@ -50,20 +52,20 @@ def read_3D_output_model(modelfile, nx=30, ny=30, nz=99):
         results is a list of arrays, which contain model parameters of the 3D model
     '''
     fid = open(modelfile,'r')
-    prd_vp = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_vs = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_thicks = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_rho = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_lons = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_lats = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_smooth = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_vsap = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_weight = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_ap = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_ae = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_tops = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_celln = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_geo = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
+    prd_vp = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_vs = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_thicks = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_rho = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_lons = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_lats = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_smooth = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_vsap = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_weight = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_ap = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_ae = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_tops = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_celln = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_geo = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
     for ilat in range(nx):
         for ilon in range(ny):
             line1 = fid.readline()
@@ -300,8 +302,9 @@ def prepare_map_data(profile_data_all, ndepth=54):
             map_lon_one_slice.append(lon)
             map_geo_one_slice.append(geo_code)
         #
-        layer_mid_depth = profile['top'][idepth] + (profile['top'][idepth+1] - \
-                                                    profile['top'][idepth])*0.5 
+        #layer_mid_depth = profile['top'][idepth] + (profile['top'][idepth+1] - \
+        #                                            profile['top'][idepth])*0.5 
+        layer_mid_depth = (profile['top'][idepth+1] + profile['top'][idepth]) * 0.5
         map_depth_all.append(layer_mid_depth)
         map_data_one_slice['vs'] = map_vs_one_slice
         map_data_one_slice['lat'] = map_lat_one_slice
@@ -314,11 +317,36 @@ def prepare_map_data(profile_data_all, ndepth=54):
                                              style_parameter)
         color_range_all_slices.append((vs_min, vs_max))
         # clip values that are out of color ranges
-        map_data_one_slice_clipped = clip_map_data(map_data_one_slice_interpolated, \
-                                                  vs_min, vs_max)
+        #map_data_one_slice_clipped = clip_map_data(map_data_one_slice_interpolated, \
+        #                                          vs_min, vs_max)
         #
-        map_data_all.append(map_data_one_slice_clipped['vs'])
+        map_data_all.append(map_data_one_slice_interpolated['vs'])
     return map_data_all, map_depth_all, color_range_all_slices
+# ========================================================
+def val_to_rgb(map_data_one_slice, palette, vmin, vmax):
+    color_data = np.zeros((np.shape(map_data_one_slice)[0], np.shape(map_data_one_slice)[1],4), dtype=np.uint8)
+    min_map = vmin
+    max_map = vmax
+    ncolor = len(palette)
+    dc_map = (max_map - min_map)/ncolor
+    for ix in range(np.shape(map_data_one_slice)[0]):
+        for iy in range(np.shape(map_data_one_slice)[1]):
+            val = map_data_one_slice[ix][iy]
+            index = int(np.floor((val - min_map)/dc_map))
+            if index < 0:
+                index = 0
+            if index >= ncolor:
+                index = ncolor - 1
+            color = palette[index].lstrip('#')
+            red = int(color[0:0+2], 16)
+            green = int(color[2:2+2], 16)
+            blue = int(color[4:4+2], 16)
+            color_data[ix][iy][0] = red
+            color_data[ix][iy][1] = green
+            color_data[ix][iy][2] = blue
+            color_data[ix][iy][3] = 255
+    #
+    return color_data
 # ========================================================
 def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
                        color_range_all_slices, profile_data_all, boundary_data, \
@@ -357,7 +385,7 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
         colorbar_data_all_left.append(colorbar_left)
         colorbar_data_all_right.append(colorbar_right)
         map_depth = map_depth_all_slices[idepth]
-        map_data_all_slices_depth.append('Depth: {0:8.0f} km'.format(map_depth))
+        map_data_all_slices_depth.append('Depth: {0:8.1f} km'.format(map_depth))
     #
     palette_r = palette[::-1]
     # data for the colorbar
@@ -375,16 +403,25 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
     map_view_label_lat = style_parameter['map_view_depth_label_lat']
     map_data_one_slice_depth = map_data_all_slices_depth[style_parameter['map_view_default_index']]
     map_data_one_slice_depth_bokeh = ColumnDataSource(data=dict(lat=[map_view_label_lat], lon=[map_view_label_lon],
-                                                           map_depth=[map_data_one_slice_depth]))
+                                                           map_depth=[map_data_one_slice_depth],
+                                                           left=[style_parameter['profile_plot_xmin']], \
+                                                           right=[style_parameter['profile_plot_xmax']]))
     
     #
     map_view_default_index = style_parameter['map_view_default_index']
-    map_data_one_slice = map_data_all_slices[map_view_default_index]
-
+    #map_data_one_slice = map_data_all_slices[map_view_default_index]
+    #
+    map_color_all_slices = []
+    for i in range(len(map_data_all_slices)):
+        vmin, vmax = color_range_all_slices[i]
+        map_color = val_to_rgb(map_data_all_slices[i], palette_r, vmin, vmax)
+        map_color_all_slices.append(map_color)
+    map_color_one_slice = map_color_all_slices[map_view_default_index]
+    #
     map_data_one_slice_bokeh = ColumnDataSource(data=dict(x=[style_parameter['map_view_image_lon_min']],\
                    y=[style_parameter['map_view_image_lat_min']],dw=[style_parameter['nlon']*style_parameter['dlon']],\
-                   dh=[style_parameter['nlat']*style_parameter['dlat']],map_data_one_slice=[map_data_one_slice]))
-    map_data_all_slices_bokeh = ColumnDataSource(data=dict(map_data_all_slices=map_data_all_slices,\
+                   dh=[style_parameter['nlat']*style_parameter['dlat']],map_data_one_slice=[map_color_one_slice]))
+    map_data_all_slices_bokeh = ColumnDataSource(data=dict(map_data_all_slices=map_color_all_slices,\
                                                            map_data_all_slices_depth=map_data_all_slices_depth))
     # ------------------------------
     nprofile = len(profile_data_all)
@@ -461,9 +498,8 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
                       y_range=[style_parameter['map_view_figure_lat_min'], style_parameter['map_view_figure_lat_max']],\
                       x_range=[style_parameter['map_view_figure_lon_min'], style_parameter['map_view_figure_lon_max']])
     #
-    map_view.image('map_data_one_slice',x='x',\
-                   y='y',dw='dw',\
-                   dh='dh',palette=palette_r,\
+    map_view.image_rgba('map_data_one_slice',x='x',\
+                   y='y',dw='dw',dh='dh',
                    source=map_data_one_slice_bokeh, level='image')
 
     depth_slider_callback = CustomJS(args=dict(map_data_one_slice_bokeh=map_data_one_slice_bokeh,\
@@ -534,7 +570,7 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
                   height_units='screen', line_color='#00ff00', line_alpha=1.0, \
                   source=selected_dot_on_map_bokeh, fill_color=None, line_width=3.,level='glyph')
     # ------------------------------
-    grid_data_bokeh.callback = CustomJS(args=dict(selected_dot_on_map_bokeh=selected_dot_on_map_bokeh, \
+    grid_data_js = CustomJS(args=dict(selected_dot_on_map_bokeh=selected_dot_on_map_bokeh, \
                                                   grid_data_bokeh=grid_data_bokeh,\
                                                   profile_data_all_bokeh=profile_data_all_bokeh,\
                                                   selected_profile_data_bokeh=selected_profile_data_bokeh,\
@@ -544,7 +580,7 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
                                                   all_profile_lon_label_bokeh=all_profile_lon_label_bokeh, \
                                                  ), code="""
         
-        var inds = Math.round(cb_obj.selected['1d'].indices)
+        var inds = cb_obj.indices
         
         var grid_data = grid_data_bokeh.data
         selected_dot_on_map_bokeh.data['lat'] = [grid_data['lat'][inds]]
@@ -564,6 +600,7 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
         selected_profile_lat_label_bokeh.change.emit()
         selected_profile_lon_label_bokeh.change.emit()
     """)
+    grid_data_bokeh.selected.js_on_change('indices', grid_data_js)
     # ------------------------------
     # change style
     map_view.title.text_font_size = style_parameter['title_font_size']
@@ -787,7 +824,7 @@ if __name__ == '__main__':
     style_parameter['map_view_depth_box_height'] = 30
     style_parameter['map_view_grid_width'] = 13
     style_parameter['map_view_grid_height'] = 12
-    style_parameter['spread_factor'] = 3
+    style_parameter['spread_factor'] = 2
     style_parameter['min_vs_range'] = 0.4
     #
     style_parameter['colorbar_title'] = 'Shear Velocity (km/s)'
@@ -827,9 +864,11 @@ if __name__ == '__main__':
     #
     style_parameter['annotating_html01'] = """<p style="font-size:16px">
         <b> Reference:</b> <br>
-        Chai, C., C. J. Ammon, M. Maceira, and R. B. Herrmann (2015), Inverting interpolated receiver functions \
+        Chai, C., Ammon, C.J., Maceira, M., Herrmann, R.B. 2015, Inverting interpolated receiver functions \
         with surface wave dispersion and gravity: Application to the western U.S. and adjacent Canada and Mexico, \
-        Geophysical Research Letters, 42(11), 4359–4366, doi:10.1002/2015GL063733.</p>"""
+        Geophysical Research Letters, 42(11), 4359–4366, doi:10.1002/2015GL063733.</br>
+        Chai, C., Ammon, C.J., Maceira, M., Herrmann, R.B., 2018. Interactive Visualization of Complex Seismic Data \
+        and Models Using Bokeh. Seismol. Res. Lett. 89, 668–676. https://doi.org/10.1785/0220170132. </p>"""
     #
     style_parameter['annotating_html02'] = """<p style="font-size:16px">
         <b> Tips:</b> <br>

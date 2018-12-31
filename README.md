@@ -2,9 +2,15 @@
 
 by Chengping Chai, Charles J. Ammon, Monica Meceira and Robert B. Herrmann
 
-This package contains source code and data for four examples of plotting 3D seismic models and data using HTML. We are using Python 2.7 for this package. In two examples, we use a dispersion model from Herrmann et al. (2013, http://www.eas.slu.edu/eqc/eqc_research/NATOMO/) and a 3D shear velocity model from Chai et al. ([GRL](http://onlinelibrary.wiley.com/doi/10.1002/2015GL063733/full), 2015, also at http://eqseis.geosc.psu.edu/~cchai/01research/01westernUS.html). Another example can plot cross-scetions and depth slices side by side. The dispersion data and velocity model are included in the folders RAYLU and WUS-CAMH-2015, respectively. The fourth example plots waveform using SAC files (data can be found in the folder WaveformData). Our plots also use political boundaries and coastlines data that are prepared with GMT (http://gmt.soest.hawaii.edu/). The boundary data for U.S. region are provided in the utility folder.
+This package contains source code and data for four examples of plotting 3D seismic models and data using HTML. We are using Python 3.6 for this package. In two examples, we use a dispersion model from Herrmann et al. (2013, http://www.eas.slu.edu/eqc/eqc_research/NATOMO/) and a 3D shear velocity model from Chai et al. ([GRL](http://onlinelibrary.wiley.com/doi/10.1002/2015GL063733/full), 2015, also at http://eqseis.geosc.psu.edu/~cchai/01research/01westernUS.html). Another example can plot cross-scetions and depth slices side by side. The dispersion data and velocity model are included in the folders RAYLU and WUS-CAMH-2015, respectively. The fourth example plots waveform using SAC files (data can be found in the folder WaveformData). Our plots also use political boundaries and coastlines data that are prepared with GMT (http://gmt.soest.hawaii.edu/). The boundary data for U.S. region are provided in the utility folder.
 
 The python script plot_dispersion_as_html.py can be used to generate an interactive plot like WUS_dispersion_viewer.html in the Results folder. The python script plot_3D_model_as_html.py was used to generate a dynamic figure like WUS_model_viewer.html (in the Results folder). The script plot_waveform_as_html.py will plot seismograms from one event that are recorded on multiple three-component stations. The utility.py contains some Python functions used by the above scripts.
+
+-----
+
+## References
+
+Chai, C., C. J. Ammon, M. Maceira, and R. B. Herrmann (2015), Inverting interpolated receiver functions with surface wave dispersion and gravity: Application to the western U.S. and adjacent Canada and Mexico, Geophysical Research Letters, 42(11), 4359–4366, doi:10.1002/2015GL063733.
 
 -----
 
@@ -12,10 +18,10 @@ The python script plot_dispersion_as_html.py can be used to generate an interact
 
 The following python packages are required to generate interactive plots using our codes.
 
-* numpy (version 1.10.4)
-* scipy (version 0.17.0)
-* bokeh (version 0.12.9)
-* obspy (version 1.0.3)
+* numpy (version 1.15.3)
+* scipy (version 1.1.0)
+* bokeh (version 1.0.2)
+* obspy (version 1.1.0)
 
 Installation these packages through Anaconda (or Miniconda) is highly recommended. You can find instructions on how to install Anaconda at https://docs.continuum.io/anaconda/install.
 

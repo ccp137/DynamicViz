@@ -3,7 +3,7 @@
 # 
 # by Chengping Chai, University of Tennessee, October 4, 2017
 # 
-# Version 1.3
+# Version 1.4
 #
 # Updates:
 #       V1.0, Chengping Chai, University of Tennessee, October 4, 2017
@@ -13,16 +13,19 @@
 #         minor changes
 #       V1.3, Chengping Chai, University of Tennessee, December 2, 2017
 #         change the reference, replace the interpolation function
+#       V1.4, Chengping Chai, Oak Ridge National Laboratory, December 31, 2018
+#         update color scaling, minor changes to work with latest libraries.
 #
 # This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh submitted to SRL.
 #
 # Requirement:
-#       numpy 1.10.4
-#       scipy 0.17.0
-#       bokeh 0.12.13
+#       numpy 1.15.3
+#       scipy 1.1.0
+#       bokeh 1.0.2
 #
 import numpy as np
 from scipy import interpolate
+from scipy.interpolate import RegularGridInterpolator
 from bokeh.plotting import Figure, output_file, save
 from bokeh.palettes import RdYlBu11 as palette
 from bokeh.plotting import ColumnDataSource
@@ -56,20 +59,20 @@ def read_3D_output_model(modelfile, nx=30, ny=30, nz=99):
         results is a list of arrays, which contain model parameters of the 3D model
     '''
     fid = open(modelfile,'r')
-    prd_vp = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_vs = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_thicks = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_rho = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_lons = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_lats = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_smooth = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_vsap = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_weight = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_ap = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_ae = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_tops = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_celln = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
-    prd_geo = [[[0 for k in xrange(nz)] for j in xrange(ny)] for i in xrange(nx)]
+    prd_vp = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_vs = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_thicks = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_rho = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_lons = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_lats = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_smooth = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_vsap = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_weight = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_ap = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_ae = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_tops = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_celln = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
+    prd_geo = [[[0 for k in range(nz)] for j in range(ny)] for i in range(nx)]
     for ilat in range(nx):
         for ilon in range(ny):
             line1 = fid.readline()
@@ -269,120 +272,6 @@ def compute_color_range(map_vs_one_slice, map_geo_one_slice, style_parameter):
     vs_max = vs_mean + vs_half_spread * style_parameter['spread_factor']
     return vs_min, vs_max
 # ========================================================
-def vel_at_depth(depth, tops, profile):
-    '''
-    version 1.0
-
-    interpolate perameters (vp, vs or rho) at a given depth for a 1D profile.
-    '''
-    import sys
-    if depth in tops:
-        depth_index = tops.index(depth)
-        data1 = profile[depth_index]
-    elif depth >= min(tops) and depth <= max(tops):
-        i = 0
-        depth0 = tops[i]
-        depth2 = tops[i+1]
-        while (depth0-depth)*(depth2-depth) > 0:
-            i = i + 1
-            depth0 = tops[i]
-            depth2 = tops[i+1]
-        #
-        idep0 = tops.index(depth0)
-        idep2 = tops.index(depth2)
-        #
-        data0 = profile[idep0]
-        data2 = profile[idep2]
-        data1 = (depth2 - depth)/(depth2-depth0)*data0 + \
-                (depth - depth0)/(depth2-depth0)*data2
-    else:
-        data1 = False
-        sys.exit('Depth input error!')
-    return data1
-#====================================================================
-def vel_at_latlon(point_lat,point_lon,prd_data):
-    '''
-    version 1.0
-
-    Compute parameters (vp, vs or rho) at a given point using bilinear 
-    interpolation for a 3D model.
-    '''
-    import sys
-    latmax = 54.5
-    lonmin = -126.5
-    nlat = 30
-    nlon = 30
-    dlat = 1.0
-    dlon = 1.0
-    latmin = latmax - (nlat - 1) * dlat
-    lonmax = lonmin + (nlon - 1) * dlon
-    flag = True
-    if point_lat > latmax or point_lat < latmax - nlat*dlat:
-        flag = False
-        sys.exit('Latitude out of range!')
-    if point_lon < lonmin or point_lon > lonmin + nlon*dlon:
-        flag = False
-        sys.exit('Longitude out of range!')
-    if flag:
-        ilat0 = int((latmax-point_lat)//dlat)
-        ilat2 = ilat0 + 1
-        lat0 = latmax - ilat0 * dlat
-        lat2 = latmax - ilat2 * dlat
-        ilon0 = int((point_lon-lonmin)//dlon)
-        ilon2 = ilon0 + 1
-        lon0 = lonmin + ilon0 * dlon
-        lon2 = lonmin + ilon2 * dlon
-        if lat0 == point_lat:
-            if abs(point_lat - latmin) < 0.01:
-                ilat0 = nlat - 1
-            if abs(point_lon - lonmax) < 0.01:
-                ilon0 = nlon - 1
-            if abs(point_lon - lonmax) < 0.01 or abs(point_lat - latmin) < 0.01:
-                data11 = prd_data[ilat0][ilon0]
-            if abs(point_lon - lonmax) > 0.01 and abs(point_lat - latmin) > 0.01:
-                data0 = prd_data[ilat0][ilon0]
-                if ilon2 > nlon or ilat0 > nlat:
-                    print point_lat, point_lon
-                data2 = prd_data[ilat0][ilon2]
-                data11 = [0 for i in range(len(data0))]
-                for i in range(len(data11)):
-                    data11[i] = (lon2-point_lon)/(lon2-lon0)*data0[i] + \
-                                (point_lon-lon0)/(lon2-lon0)*data2[i]
-        elif lon0 == point_lon:
-            if abs(point_lat - latmin) < 0.01:
-                ilat0 = nlat - 1
-            if abs(point_lon - lonmax) < 0.01:
-                ilon0 = nlon - 1
-            if abs(point_lon - lonmax) < 0.01 or abs(point_lat - latmin) < 0.01:
-                data11 = prd_data[ilat0][ilon0]
-            if abs(point_lat - latmin) > 0.01 and abs(point_lon - lonmax) > 0.01:
-                data0 = prd_data[ilat0][ilon0]
-                data2 = prd_data[ilat2][ilon0]
-                data11 = [0 for i in range(len(data0))]
-                for i in range(len(data11)):
-                    data11[i] = (point_lat-lat0)/(lat2-lat0)*data0[i] + \
-                                (lat2-point_lat)/(lat2-lat0)*data2[i]
-        else:
-            data00 = prd_data[ilat0][ilon0]
-            data02 = prd_data[ilat0][ilon2]
-            data20 = prd_data[ilat2][ilon0]
-            data22 = prd_data[ilat2][ilon2]
-            data01 = [0 for i in range(len(data00))]
-            data21 = [0 for i in range(len(data00))]
-            data11 = [0 for i in range(len(data00))]
-            for i in range(len(data01)):
-                data01[i] = (lon2-point_lon)/(lon2-lon0)*data00[i] + \
-                            (point_lon-lon0)/(lon2-lon0)*data02[i]
-            for i in range(len(data21)):
-                data21[i] = (lon2-point_lon)/(lon2-lon0)*data20[i] + \
-                            (point_lon-lon0)/(lon2-lon0)*data22[i]
-            for i in range(len(data11)):
-                data11[i] = (point_lat-lat0)/(lat2-lat0)*data01[i] + \
-                            (lat2-point_lat)/(lat2-lat0)*data21[i]
-    else:
-        data11 = flag
-    return data11
-# ========================================================
 def prepare_map_data(profile_data_all, ndepth=54):
     '''
     Prepare data for map view plots
@@ -434,10 +323,10 @@ def prepare_map_data(profile_data_all, ndepth=54):
                                              style_parameter)
         color_range_all_slices.append((vs_min, vs_max))
         # clip values that are out of color ranges
-        map_data_one_slice_clipped = clip_map_data(map_data_one_slice_interpolated, \
-                                                  vs_min, vs_max)
+        #map_data_one_slice_clipped = clip_map_data(map_data_one_slice_interpolated, \
+        #                                          vs_min, vs_max)
         #
-        map_data_all.append(map_data_one_slice_clipped['vs'])
+        map_data_all.append(map_data_one_slice_interpolated['vs'])
     return map_data_all, map_depth_all, color_range_all_slices
 # ========================================================
 def prepare_cross_data(model_3D, style_parameter):
@@ -474,15 +363,21 @@ def prepare_cross_data(model_3D, style_parameter):
             loni = lon0 + np.arange(nlon) * dlon * np.sign(lon1 - lon0)
             lati = loni * k + b
     #
+    x_list = [-model_3D['lat'][i][0][0] for i in range(np.shape(model_3D['lat'])[0])]
+    y_list = [model_3D['lon'][0][i][0]+360  for i in range(np.shape(model_3D['lon'])[1])]
+    z_list = [model_3D['top'][0][0][i] for i in range(np.shape(model_3D['top'])[2])]
+    #
+    interpolator_vs = RegularGridInterpolator((x_list, y_list, z_list), model_3D['vs'])
+    #
     cross_data = []
     depth = np.arange(depth_nmax) * ddepth
     for i in range(len(loni)):
         lon = loni[i]
         lat = lati[i]
-        val = vel_at_latlon(lat, lon, model_3D['vs'])
         temp_list = []
         for ik in range(depth_nmax-1, -1, -1):
-            temp = vel_at_depth(depth[ik], model_3D['top'][0][0], val)
+            coords = [-lat, lon+360, depth[ik]]
+            temp = interpolator_vs(coords)[0]
             temp_list.append(temp)
         cross_data.append(temp_list)
     #
@@ -514,6 +409,31 @@ def great_arc_distance(lat1, lon1, lat2, lon2):
     c = 2. * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     d = EARTH_RADIUS * c # distance in km
     return d
+# ========================================================
+def val_to_rgb(map_data_one_slice, palette, vmin, vmax):
+    color_data = np.zeros((np.shape(map_data_one_slice)[0], np.shape(map_data_one_slice)[1],4), dtype=np.uint8)
+    min_map = vmin
+    max_map = vmax
+    ncolor = len(palette)
+    dc_map = (max_map - min_map)/ncolor
+    for ix in range(np.shape(map_data_one_slice)[0]):
+        for iy in range(np.shape(map_data_one_slice)[1]):
+            val = map_data_one_slice[ix][iy]
+            index = int(np.floor((val - min_map)/dc_map))
+            if index < 0:
+                index = 0
+            if index >= ncolor:
+                index = ncolor - 1
+            color = palette[index].lstrip('#')
+            red = int(color[0:0+2], 16)
+            green = int(color[2:2+2], 16)
+            blue = int(color[4:4+2], 16)
+            color_data[ix][iy][0] = red
+            color_data[ix][iy][1] = green
+            color_data[ix][iy][2] = blue
+            color_data[ix][iy][3] = 255
+    #
+    return color_data
 # ========================================================
 def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
                              color_range_all_slices, cross_data, boundary_data, \
@@ -577,21 +497,31 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
     
     #
     map_view_default_index = style_parameter['map_view_default_index']
-    map_data_one_slice = map_data_all_slices[map_view_default_index]
-
+    #map_data_one_slice = map_data_all_slices[map_view_default_index]
+    map_color_all_slices = []
+    for i in range(len(map_data_all_slices)):
+        vmin, vmax = color_range_all_slices[i]
+        map_color = val_to_rgb(map_data_all_slices[i], palette_r, vmin, vmax)
+        map_color_all_slices.append(map_color)
+    map_color_one_slice = map_color_all_slices[map_view_default_index]
+    #
     map_data_one_slice_bokeh = ColumnDataSource(data=dict(x=[style_parameter['map_view_image_lon_min']],\
                    y=[style_parameter['map_view_image_lat_min']],dw=[style_parameter['nlon']],\
-                   dh=[style_parameter['nlat']],map_data_one_slice=[map_data_one_slice]))
-    map_data_all_slices_bokeh = ColumnDataSource(data=dict(map_data_all_slices=map_data_all_slices,\
+                   dh=[style_parameter['nlat']],map_data_one_slice=[map_color_one_slice]))
+    map_data_all_slices_bokeh = ColumnDataSource(data=dict(map_data_all_slices=map_color_all_slices,\
                                                            map_data_all_slices_depth=map_data_all_slices_depth))
     #
     
     plot_depth = np.shape(cross_data)[0] * style_parameter['cross_ddepth']
     plot_lon = great_arc_distance(style_parameter['cross_default_lat0'], style_parameter['cross_default_lon0'],\
                                   style_parameter['cross_default_lat1'], style_parameter['cross_default_lon1'])
+    
+    vs_min = style_parameter['cross_view_vs_min']
+    vs_max = style_parameter['cross_view_vs_max']
+    cross_color = val_to_rgb(cross_data, palette_r, vmin, vmax)
     cross_data_bokeh = ColumnDataSource(data=dict(x=[0],\
                    y=[plot_depth],dw=[plot_lon],\
-                   dh=[plot_depth],cross_data=[cross_data]))
+                   dh=[plot_depth],cross_data=[cross_color]))
     
     map_line_bokeh = ColumnDataSource(data=dict(lat=[style_parameter['cross_default_lat0'], style_parameter['cross_default_lat1']],\
                                                     lon=[style_parameter['cross_default_lon0'], style_parameter['cross_default_lon1']]))
@@ -610,9 +540,8 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
                       y_range=[style_parameter['map_view_figure_lat_min'], style_parameter['map_view_figure_lat_max']],\
                       x_range=[style_parameter['map_view_figure_lon_min'], style_parameter['map_view_figure_lon_max']])
     #
-    map_view.image('map_data_one_slice',x='x',\
-                   y='y',dw='dw',\
-                   dh='dh',palette=palette_r,\
+    map_view.image_rgba('map_data_one_slice',x='x',\
+                   y='y',dw='dw',dh='dh',\
                    source=map_data_one_slice_bokeh, level='image')
 
     depth_slider_callback = CustomJS(args=dict(map_data_one_slice_bokeh=map_data_one_slice_bokeh,\
@@ -727,9 +656,8 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
                       tools=style_parameter['cross_view_tools'], title=style_parameter['cross_view_title'], \
                       y_range=[plot_depth, -30],\
                       x_range=[0, plot_lon])
-    cross_view.image('cross_data',x='x',\
-                   y='y',dw='dw',\
-                   dh='dh',palette=my_palette,\
+    cross_view.image_rgba('cross_data',x='x',\
+                   y='y',dw='dw',dh='dh',\
                    source=cross_data_bokeh, level='image')
     cross_view.text([plot_lon*0.1], [-10], ['A'], \
                 text_font_size=style_parameter['title_font_size'],text_align='left',level='underlay')
@@ -811,7 +739,7 @@ if __name__ == '__main__':
     style_parameter['map_view_depth_box_height'] = 30
     style_parameter['map_view_grid_width'] = 13
     style_parameter['map_view_grid_height'] = 12
-    style_parameter['spread_factor'] = 3
+    style_parameter['spread_factor'] = 2
     style_parameter['min_vs_range'] = 0.4
     #
     style_parameter['colorbar_title'] = 'Shear Velocity (km/s)'
@@ -832,8 +760,8 @@ if __name__ == '__main__':
     style_parameter['cross_view_vs_min'] = 2.8
     style_parameter['cross_view_vs_max'] = 4.6
     style_parameter['cross_ddepth'] = 1.0
-    style_parameter['cross_dlat'] = 0.5
-    style_parameter['cross_dlon'] = 0.5
+    style_parameter['cross_dlat'] = 0.25
+    style_parameter['cross_dlon'] = 0.25
     style_parameter['cross_view_title'] = 'Cross-section'
     style_parameter['cross_view_tools'] = ['save', 'crosshair']
     #
