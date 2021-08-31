@@ -15,13 +15,16 @@
 #         added taper and filter
 #       V1.4, Chengping Chai, Oak Ridge National Laboratory, December 31, 2018
 #         minor changes to work with latest libraries.
+#       V1.5, Chengping Chai, Oak Ridge National Laboratory, August 31, 2021
+#         minor changes to work with latest libraries.
 #
-# This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh submitted to SRL.
+# This script is prepared for a paper named as Interactive Visualization of
+#  Complex Seismic Data and Models Using Bokeh submitted to SRL.
 #
 # Requirement:
-#       numpy 1.15.3
-#       bokeh 1.0.2
-#       obspy 1.1.3
+#       numpy 1.21.1
+#       bokeh 2.3.2
+#       obspy 1.2.2
 #
 import numpy as np
 from bokeh.plotting import Figure, output_file, save
@@ -454,8 +457,9 @@ def plot_waveform_bokeh(filename,waveform_list,metadata_list,station_lat_list,\
     """)
     curve_slider = Slider(start=0, end=ncurve-1, value=style_parameter['curve_default_index'], \
                           step=1, title=style_parameter['curve_slider_title'], width=style_parameter['map_view_plot_width'],\
-                          height=50, callback=curve_slider_callback)
-    
+                          height=50)
+    curve_slider.js_on_change('value', curve_slider_callback)
+    curve_slider_callback.args['curve_index'] = curve_slider
     # ==============================
     # annotating text
     annotating_fig01 = Div(text=style_parameter['annotating_html01'], \

@@ -3,7 +3,7 @@
 # 
 # by Chengping Chai, Penn State, 2016
 # 
-# Version 1.4
+# Version 1.5
 #
 # Updates:
 #       V1.0  Chengping Chai, Penn State, 2016
@@ -15,12 +15,15 @@
 #         change the reference
 #       V1.4, Chengping Chai, Oak Ridge National Laboratory, December 31, 2018
 #         minor changes to work with latest libraries.
+#       V1.5, Chengping Chai, Oak Ridge National Laboratory, August 31, 2021
+#         minor changes to work with latest libraries.
 #
-# This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh submitted to SRL.
+# This script is prepared for a paper named as Interactive Visualization of 
+# Complex Seismic Data and Models Using Bokeh submitted to SRL.
 #
 # Requirement:
-#       numpy 1.15.3
-#       bokeh 1.0.2
+#       numpy 1.21.1
+#       bokeh 2.3.2
 #
 import numpy as np
 from bokeh.plotting import Figure, output_file, save
@@ -494,8 +497,9 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
     period_slider = Slider(start=0, end=nperiod-1, value=style_parameter['map_view_default_index'], \
                            step=1, title=style_parameter['period_slider_title'], \
                            width=style_parameter['period_slider_plot_width'],\
-                           height=50, callback=period_slider_callback)
-    
+                           height=50)
+    period_slider.js_on_change('value', period_slider_callback)
+    period_slider_callback.args['period_index'] = period_slider
     # ==============================
     curve_slider_callback = CustomJS(args=dict(selected_dot_on_map_bokeh=selected_dot_on_map_bokeh,\
                                               map_data_one_slice_bokeh=map_data_one_slice_bokeh,\
@@ -533,8 +537,9 @@ def plot_dispersion_bokeh(filename, period_array, curve_data_array, boundary_dat
     """)
     curve_slider = Slider(start=0, end=ncurve-1, value=style_parameter['curve_default_index'], \
                           step=1, title=style_parameter['curve_slider_title'], width=style_parameter['curve_plot_width'],\
-                          height=50, callback=curve_slider_callback)
-    
+                          height=50)
+    curve_slider.js_on_change('value', curve_slider_callback)
+    curve_slider_callback.args['curve_index'] = curve_slider
     # ==============================
     # annotating text
     annotating_fig01 = Div(text=style_parameter['annotating_html01'], \

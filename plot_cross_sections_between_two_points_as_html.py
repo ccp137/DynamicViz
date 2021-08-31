@@ -15,13 +15,17 @@
 #         change the reference, replace the interpolation function
 #       V1.4, Chengping Chai, Oak Ridge National Laboratory, December 31, 2018
 #         update color scaling, minor changes to work with latest libraries.
+#       V1.5, Chengping Chai, Oak Ridge National Laboratory, August 31, 2021
+#         minor changes to work with latest libraries.
 #
-# This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh submitted to SRL.
+# This script is prepared for a paper named as Interactive Visualization of 
+# Complex Seismic Data and Models Using Bokeh
+# submitted to SRL.
 #
 # Requirement:
-#       numpy 1.15.3
-#       scipy 1.1.0
-#       bokeh 1.0.2
+#       numpy 1.21.1
+#       scipy 1.7.0
+#       bokeh 2.3.2
 #
 import numpy as np
 from scipy import interpolate
@@ -502,7 +506,8 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
     for i in range(len(map_data_all_slices)):
         vmin, vmax = color_range_all_slices[i]
         map_color = val_to_rgb(map_data_all_slices[i], palette_r, vmin, vmax)
-        map_color_all_slices.append(map_color)
+        map_color_2d = map_color.view('uint32').reshape(map_color.shape[:2])
+        map_color_all_slices.append(map_color_2d)
     map_color_one_slice = map_color_all_slices[map_view_default_index]
     #
     map_data_one_slice_bokeh = ColumnDataSource(data=dict(x=[style_parameter['map_view_image_lon_min']],\
@@ -518,10 +523,11 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
     
     vs_min = style_parameter['cross_view_vs_min']
     vs_max = style_parameter['cross_view_vs_max']
-    cross_color = val_to_rgb(cross_data, palette_r, vmin, vmax)
+    cross_color = val_to_rgb(cross_data, palette_r, vs_min, vs_max)
+    cross_color_2d = cross_color.view('uint32').reshape(cross_color.shape[:2])
     cross_data_bokeh = ColumnDataSource(data=dict(x=[0],\
                    y=[plot_depth],dw=[plot_lon],\
-                   dh=[plot_depth],cross_data=[cross_color]))
+                   dh=[plot_depth],cross_data=[cross_color_2d]))
     
     map_line_bokeh = ColumnDataSource(data=dict(lat=[style_parameter['cross_default_lat0'], style_parameter['cross_default_lat1']],\
                                                     lon=[style_parameter['cross_default_lon0'], style_parameter['cross_default_lon1']]))
@@ -569,8 +575,9 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
     depth_slider = Slider(start=0, end=style_parameter['map_view_ndepth']-1, \
                           value=map_view_default_index, step=1, \
                           width=style_parameter['map_view_plot_width'],\
-                          title=style_parameter['depth_slider_title'], height=50, \
-                          callback=depth_slider_callback)
+                          title=style_parameter['depth_slider_title'], height=50)
+    depth_slider.js_on_change('value', depth_slider_callback)
+    depth_slider_callback.args["depth_index"] = depth_slider
     # ------------------------------
     # add boundaries to map view
     # country boundaries
@@ -772,7 +779,9 @@ if __name__ == '__main__':
         <b> Reference:</b> <br>
         Chai, C., C. J. Ammon, M. Maceira, and R. B. Herrmann (2015), Inverting interpolated receiver functions \
         with surface wave dispersion and gravity: Application to the western U.S. and adjacent Canada and Mexico, \
-        Geophysical Research Letters, 42(11), 4359–4366, doi:10.1002/2015GL063733.</p>
+        Geophysical Research Letters, 42(11), 4359–4366, doi:10.1002/2015GL063733. </br>
+        Chai, C., Ammon, C.J., Maceira, M., Herrmann, R.B., 2018. Interactive Visualization of Complex Seismic Data \
+        and Models Using Bokeh. Seismol. Res. Lett. 89, 668–676. https://doi.org/10.1785/0220170132. </p>
         <b> Tips:</b> <br>
         Drag a slider to change the depth or the cross-section location. <br>
         The dashed lines show cross-section locations on the Shear Velocity Map. <br>

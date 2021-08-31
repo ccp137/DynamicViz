@@ -16,7 +16,8 @@
 #       V1.4, Chengping Chai, Oak Ridge National Laboratory, December 31, 2018
 #         update color scaling, minor changes to work with latest libraries.
 #
-# This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh submitted to SRL.
+# This script is prepared for a paper named as Interactive Visualization of
+#  Complex Seismic Data and Models Using Bokeh submitted to SRL.
 #
 # Requirement:
 #       numpy 1.15.3
@@ -538,7 +539,8 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
     for i in range(len(map_data_all_slices)):
         vmin, vmax = color_range_all_slices[i]
         map_color = val_to_rgb(map_data_all_slices[i], palette_r, vmin, vmax)
-        map_color_all_slices.append(map_color)
+        map_color_2d = map_color.view('uint32').reshape(map_color.shape[:2])
+        map_color_all_slices.append(map_color_2d)
     map_color_one_slice = map_color_all_slices[map_view_default_index]
     #
     map_data_one_slice_bokeh = ColumnDataSource(data=dict(x=[style_parameter['map_view_image_lon_min']],\
@@ -556,7 +558,8 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
         vmin = style_parameter['cross_view_vs_min']
         vmax = style_parameter['cross_view_vs_max']
         cross_color = val_to_rgb(cross_lat_data_all[i], palette_r, vmin, vmax)
-        cross_lat_color_all.append(cross_color)
+        cross_color_2d = cross_color.view('uint32').reshape(cross_color.shape[:2])
+        cross_lat_color_all.append(cross_color_2d)
     cross_lat_color_one_slice = cross_lat_color_all[style_parameter['cross_lat_default_index']]
     #
     plot_depth = np.shape(cross_lat_color_one_slice)[0] * style_parameter['cross_ddepth']
@@ -584,7 +587,8 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
         vmin = style_parameter['cross_view_vs_min']
         vmax = style_parameter['cross_view_vs_max']
         cross_color = val_to_rgb(cross_lon_data_all[i], palette_r, vmin, vmax)
-        cross_lon_color_all.append(cross_color)
+        cross_color_2d = cross_color.view('uint32').reshape(cross_color.shape[:2])
+        cross_lon_color_all.append(cross_color_2d)
     cross_lon_color_one_slice = cross_lon_color_all[style_parameter['cross_lon_default_index']]
     #
     plot_depth = np.shape(cross_lon_color_one_slice)[0] * style_parameter['cross_ddepth']
@@ -646,8 +650,9 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
     depth_slider = Slider(start=0, end=style_parameter['map_view_ndepth']-1, \
                           value=map_view_default_index, step=1, \
                           width=style_parameter['map_view_plot_width'],\
-                          title=style_parameter['depth_slider_title'], height=50, \
-                          callback=depth_slider_callback)
+                          title=style_parameter['depth_slider_title'], height=50)
+    depth_slider.js_on_change('value', depth_slider_callback)
+    depth_slider_callback.args["depth_index"] = depth_slider
     # ------------------------------
     # add boundaries to map view
     # country boundaries
@@ -830,8 +835,9 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
     lat_slider = Slider(start=0, end=style_parameter['nlat']-1, \
                           value=style_parameter['cross_lat_default_index'], step=1, \
                           width=style_parameter['cross_lat_plot_width'],\
-                          title=style_parameter['lat_slider_title'], height=50, \
-                          callback=lat_slider_callback)
+                          title=style_parameter['lat_slider_title'], height=50)
+    lat_slider.js_on_change('value', lat_slider_callback)
+    lat_slider_callback.args['lat_index'] = lat_slider
     # ==============================
     lon_slider_callback = CustomJS(args=dict(cross_lon_data_one_slice_bokeh=cross_lon_data_one_slice_bokeh,\
                                              cross_lon_data_all_slices_bokeh=cross_lon_data_all_slices_bokeh,\
@@ -857,8 +863,9 @@ def plot_cross_section_bokeh(filename, map_data_all_slices, map_depth_all_slices
     lon_slider = Slider(start=0, end=style_parameter['nlon']-1, \
                           value=style_parameter['cross_lon_default_index'], step=1, \
                           width=style_parameter['cross_lon_plot_width'],\
-                          title=style_parameter['lon_slider_title'], height=50, \
-                          callback=lon_slider_callback)
+                          title=style_parameter['lon_slider_title'], height=50)
+    lon_slider.js_on_change('value', lon_slider_callback)
+    lon_slider_callback.args['lon_index'] = lon_slider
     # ==============================
     output_file(filename,title=style_parameter['html_title'], mode=style_parameter['library_source'])
     left_column = Column(depth_slider, map_view, colorbar_fig, annotating_fig01, width=style_parameter['left_column_width'])

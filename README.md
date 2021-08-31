@@ -1,4 +1,4 @@
-# Interactive Visualization of  Complex Seismic Data and Models Using Bokeh
+# Interactive Visualization of Complex Seismic Data and Models Using Bokeh
 
 by Chengping Chai, Charles J. Ammon, Monica Meceira and Robert B. Herrmann
 
@@ -10,7 +10,8 @@ The python script plot_dispersion_as_html.py can be used to generate an interact
 
 ## References
 
-Chai, C., C. J. Ammon, M. Maceira, and R. B. Herrmann (2015), Inverting interpolated receiver functions with surface wave dispersion and gravity: Application to the western U.S. and adjacent Canada and Mexico, Geophysical Research Letters, 42(11), 4359–4366, doi:10.1002/2015GL063733.
+* Chai, Chengping, Charles J. Ammon, Monica Maceira, and Robert B. Herrmann. 2015. “Inverting Interpolated Receiver Functions with Surface Wave Dispersion and Gravity: Application to the Western U.S. and Adjacent Canada and Mexico.” Geophysical Research Letters 42 (11): 4359–66. https://doi.org/10.1002/2015GL063733.
+* Chai, Chengping, Charles J. Ammon, Monica Maceira, and Robert B. Herrmann. 2018. “Interactive Visualization of Complex Seismic Data and Models Using Bokeh.” Seismological Research Letters 89 (2A): 668–76. https://doi.org/10.1785/0220170132.
 
 -----
 
@@ -18,10 +19,10 @@ Chai, C., C. J. Ammon, M. Maceira, and R. B. Herrmann (2015), Inverting interpol
 
 The following python packages are required to generate interactive plots using our codes.
 
-* numpy (version 1.15.3)
-* scipy (version 1.1.0)
-* bokeh (version 1.0.2)
-* obspy (version 1.1.0)
+* numpy (version 1.21.1)
+* scipy (version 1.7.0)
+* bokeh (version 2.3.2)
+* obspy (version 1.2.2)
 
 Installation these packages through Anaconda (or Miniconda) is highly recommended. You can find instructions on how to install Anaconda at https://docs.continuum.io/anaconda/install.
 

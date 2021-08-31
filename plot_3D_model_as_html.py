@@ -3,7 +3,7 @@
 #
 # by Chengping Chai, Penn State, 2016
 #
-# Version 1.4
+# Version 1.5
 #
 # Updates:
 #       V1.0, Chengping Chai, Penn State, 2016
@@ -15,14 +15,17 @@
 #         change the reference
 #		V1.4, Chengping Chai, Oak Ridge National Laboratory, December 31, 2018
 #		  update color scaling, minor changes to work with latest libraries.
+#       V1.5, Chengping Chai, Oak Ridge National Laboratory, August 31, 2021
+#         minor changes to work with latest libraries.
 #
-# This script is prepared for a paper named as Interactive Visualization of  Complex Seismic Data and Models Using Bokeh
+# This script is prepared for a paper named as Interactive Visualization of 
+# Complex Seismic Data and Models Using Bokeh
 # submitted to SRL.
 #
 # Requirement:
-#       numpy 1.15.3
-#       scipy 1.1.0
-#       bokeh 1.0.2
+#       numpy 1.21.1
+#       scipy 1.7.0
+#       bokeh 2.3.2
 #
 import numpy as np
 from scipy import interpolate
@@ -36,6 +39,7 @@ from bokeh.models import FixedTicker, PrintfTickFormatter
 from bokeh.models import Rect
 from bokeh.models import Range1d
 from bokeh.models.widgets import Div
+
 from utility import *
 # ========================================================
 def read_3D_output_model(modelfile, nx=30, ny=30, nz=99):
@@ -415,7 +419,8 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
     for i in range(len(map_data_all_slices)):
         vmin, vmax = color_range_all_slices[i]
         map_color = val_to_rgb(map_data_all_slices[i], palette_r, vmin, vmax)
-        map_color_all_slices.append(map_color)
+        map_color_2d = map_color.view('uint32').reshape(map_color.shape[:2])
+        map_color_all_slices.append(map_color_2d)
     map_color_one_slice = map_color_all_slices[map_view_default_index]
     #
     map_data_one_slice_bokeh = ColumnDataSource(data=dict(x=[style_parameter['map_view_image_lon_min']],\
@@ -527,8 +532,9 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
     depth_slider = Slider(start=0, end=style_parameter['map_view_ndepth']-1, \
                           value=map_view_default_index, step=1, \
                           width=style_parameter['map_view_plot_width'],\
-                          title=style_parameter['depth_slider_title'], height=50, \
-                          callback=depth_slider_callback)
+                          title=style_parameter['depth_slider_title'], height=50)
+    depth_slider.js_on_change('value', depth_slider_callback)
+    depth_slider_callback.args["depth_index"] = depth_slider
     # ------------------------------
     # add boundaries to map view
     # country boundaries
@@ -700,9 +706,9 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
     """)
     profile_slider = Slider(start=0, end=nprofile-1, value=style_parameter['profile_default_index'], \
                            step=1, title=style_parameter['profile_slider_title'], \
-                           width=style_parameter['profile_plot_width'], height=50,\
-                           callback=profile_slider_callback)
+                           width=style_parameter['profile_plot_width'], height=50)
     profile_slider_callback.args['profile_index'] = profile_slider
+    profile_slider.js_on_change('value', profile_slider_callback)
     # ==============================
     simple_text_button_callback = CustomJS(args=dict(button_data_all_bokeh=button_data_all_bokeh,\
                                                     selected_dot_on_map_bokeh=selected_dot_on_map_bokeh), \
@@ -714,7 +720,7 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
         var button_data_rho = button_data_all_bokeh.data['button_data_all_rho'][index]
         var button_data_top = button_data_all_bokeh.data['button_data_all_top'][index]
         
-        var csvContent = "data:text;charset=utf-8,"
+        var csvContent = ""
         var i = 0
         var temp = csvContent
         temp += "# Layer Top (km)      Vs(km/s)    Vp(km/s)    Rho(g/cm^3) \\n"
@@ -723,16 +729,18 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
                     button_data_vp[i].toPrecision(4) + "   " + button_data_rho[i].toPrecision(4) + "\\n"
             i = i + 1
         }
-        var encodedUri = encodeURI(temp)
-        link = document.createElement('a');
-        link.setAttribute('href', encodedUri);
-        link.setAttribute('download', 'vel_model.txt');
-        link.click();
+        const blob = new Blob([temp], { type: 'text/csv;charset=utf-8;' })
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'vel_model.txt';
+        link.target = '_blank'
+        link.style.visibility = 'hidden'
+        link.dispatchEvent(new MouseEvent('click'))
         
     """)
 
-    simple_text_button = Button(label=style_parameter['simple_text_button_label'], button_type='default', width=style_parameter['button_width'],\
-                                callback=simple_text_button_callback)
+    simple_text_button = Button(label=style_parameter['simple_text_button_label'], button_type='default', width=style_parameter['button_width'])
+    simple_text_button.js_on_click(simple_text_button_callback)
     # ------------------------------
     model96_button_callback = CustomJS(args=dict(button_data_all_bokeh=button_data_all_bokeh,\
                                                     selected_dot_on_map_bokeh=selected_dot_on_map_bokeh), \
@@ -746,7 +754,7 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
         var button_data_rho = button_data_all_bokeh.data['button_data_all_rho'][index]
         var button_data_top = button_data_all_bokeh.data['button_data_all_top'][index]
         
-        var csvContent = "data:text;charset=utf-8,"
+        var csvContent = ""
         var i = 0
         var temp = csvContent
         temp +=  "MODEL." + index + " \\n"
@@ -767,14 +775,16 @@ def plot_3DModel_bokeh(filename, map_data_all_slices, map_depth_all_slices, \
                  + "      " + button_data_rho[i].toPrecision(4) + "     0.00       0.00       0.00       0.00       1.00       1.00" + "\\n"
             i = i + 1
         }
-        var encodedUri = encodeURI(temp)
-        link = document.createElement('a');
-        link.setAttribute('href', encodedUri);
-        link.setAttribute('download', 'vel_model96.txt');
-        link.click();
+        const blob = new Blob([temp], { type: 'text/csv;charset=utf-8;' })
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'vel_model96.txt';
+        link.target = '_blank'
+        link.style.visibility = 'hidden'
+        link.dispatchEvent(new MouseEvent('click'))
     """)
-    model96_button = Button(label=style_parameter['model96_button_label'], button_type='default', width=style_parameter['button_width'],\
-                                callback=model96_button_callback)
+    model96_button = Button(label=style_parameter['model96_button_label'], button_type='default', width=style_parameter['button_width'])
+    model96_button.js_on_click(model96_button_callback)
     # ==============================
     # annotating text
     annotating_fig01 = Div(text=style_parameter['annotating_html01'], \
